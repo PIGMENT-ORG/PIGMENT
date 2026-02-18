@@ -44,7 +44,6 @@ const EvolutionEngine = {
         let impr=0;
         for(let i=0;i<speed;i++){const r=this.mutateOne();if(r.improved)impr++;}
         
-        // Save embedding every 100 generations
         if(this.generation % 100 === 0) {
             this.saveImageEmbedding();
         }
@@ -52,18 +51,33 @@ const EvolutionEngine = {
         return {generation:this.generation,error:this.bestError,improvements:impr,fitness:this.getFitness()};
     },
     
-    selectMutation(){
-        const f=this.getFitness();
-        if(this.config.intelligence&&f<80&&Math.random()<0.15)return 'intelligent';
+    async selectMutation() {
+        const f = this.getFitness();
+        const state = {
+            fitness: Math.floor(f / 10) * 10,
+            plateau: this.plateauCount > 500 ? 'stuck' : 'moving',
+            stage: f < 30 ? 'early' : f < 60 ? 'mid' : 'late',
+            polygonCount: this.polygons.length
+        };
+        
+        if (this.config.supabase && this.config.supabase.enabled) {
+            const rlResult = await this.config.supabase.selectMutation(state);
+            if (rlResult.source === 'rl' && rlResult.action) {
+                console.log('RL chose:', rlResult.action);
+                return rlResult.action;
+            }
+        }
+        
+        if(this.config.intelligence && f<80 && Math.random()<0.15) return 'intelligent';
         if(this.plateauCount>1000){const r=Math.random();if(r<0.4)return'translate';if(r<0.7)return'scale';return'rotate';}
         if(f>90){const r=Math.random();if(r<0.3)return'color';if(r<0.5)return'opacity';if(r<0.7)return'translate';return'scale';}
         const r=Math.random();if(r<0.35)return'translate';if(r<0.60)return'scale';if(r<0.80)return'rotate';if(r<0.95)return'color';return'opacity';
     },
     
-    mutateOne(){
+    async mutateOne(){
         const idx=Math.floor(Math.random()*this.polygons.length);
         const candidate=this.clone(this.polygons);
-        const mtype=this.selectMutation();
+        const mtype=await this.selectMutation();
         const mutation=MutationRegistry.get(mtype);
         const ctx={W:this.config.width,H:this.config.height,generation:this.generation,fitness:this.getFitness(),temperature:parseFloat(document.getElementById('temperature')?.value||'1'),intelligence:this.config.intelligence,allPolygons:this.polygons};
         candidate[idx]=mutation.mutate(this.polygons[idx],ctx);
@@ -77,12 +91,32 @@ const EvolutionEngine = {
         const offspringFitness = 100 * (1 - error / (255*255*3*this.config.width*this.config.height));
         const improved = error < this.bestError;
         
+        const reward = improved ? 1.0 : -0.1;
+        
+        const currentState = {
+            fitness: Math.floor(parentFitness / 10) * 10,
+            plateau: this.plateauCount > 500 ? 'stuck' : 'moving',
+            stage: parentFitness < 30 ? 'early' : parentFitness < 60 ? 'mid' : 'late',
+            polygonCount: this.polygons.length
+        };
+        
+        const nextState = {
+            fitness: Math.floor(offspringFitness / 10) * 10,
+            plateau: improved ? 'moving' : (this.plateauCount + 1 > 500 ? 'stuck' : 'moving'),
+            stage: offspringFitness < 30 ? 'early' : offspringFitness < 60 ? 'mid' : 'late',
+            polygonCount: this.polygons.length
+        };
+        
+        if (this.config.supabase && this.config.supabase.enabled) {
+            this.config.supabase.updateRL(currentState, mtype, reward, nextState)
+                .catch(err => console.log('RL update err:', err));
+        }
+        
         if(improved){
             this.polygons=candidate;this.bestPolys=this.clone(candidate);
             this.bestError=error;this.improvements++;this.lastImprovementGen=this.generation;
             this.plateauCount=0;this.mutationRate=Math.max(0.3,this.mutationRate*0.998);
             
-            // Record successful mutation
             this.recordTrainingData({
                 operator: mtype,
                 success: true,
@@ -99,7 +133,6 @@ const EvolutionEngine = {
             this.generation++;return{accepted:true,improved:true};
         }
         
-        // Record failed mutation (still valuable for learning)
         this.recordTrainingData({
             operator: mtype,
             success: false,
@@ -133,7 +166,6 @@ const EvolutionEngine = {
                 styleCategory: 'general'
             });
         } catch (err) {
-            // Silently fail - don't disrupt evolution
             console.log('ML recording:', err.message);
         }
     },
@@ -141,10 +173,9 @@ const EvolutionEngine = {
     async saveImageEmbedding() {
         if (!this.config.supabase || !this.config.supabase.enabled) return;
         if (this.generation % 100 !== 0) return;
-        if (this.getFitness() < 50) return; // Only save decent results
+        if (this.getFitness() < 30) return;
         
         try {
-            // Render current best to canvas
             const canvas = document.createElement('canvas');
             canvas.width = this.config.width;
             canvas.height = this.config.height;
@@ -164,14 +195,10 @@ const EvolutionEngine = {
                 ctx.fill();
             }
             
-            // Get base64 image
             const imageBase64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-            
-            // Generate embedding
             const embedding = await this.config.supabase.generateEmbedding(imageBase64);
             
             if (embedding) {
-                // Store in database via Edge Function
                 await fetch(`${this.config.supabase.url}/functions/v1/learn-from-evolution`, {
                     method: 'POST',
                     headers: {
