@@ -41,7 +41,7 @@
             border: 1px solid #3a5a2a;
         }
 
-        #dropzone {
+        #dropzone, #pgLoader {
             border: 2px dashed #3a3828;
             border-radius: 8px;
             padding: 28px 44px;
@@ -52,7 +52,8 @@
             transition: all 0.2s;
         }
 
-        #dropzone.over, #dropzone:hover {
+        #dropzone.over, #pgLoader.over,
+        #dropzone:hover, #pgLoader:hover {
             border-color: #c8a838;
             background: rgba(184,152,56,0.04);
         }
@@ -88,6 +89,11 @@
             color: #d8f0c0;
         }
 
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
         .panels {
             display: flex;
             gap: 20px;
@@ -100,6 +106,13 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
+        }
+
+        .plabel {
+            font-size: 0.65em;
+            color: #3a3828;
+            letter-spacing: .09em;
+            text-transform: uppercase;
         }
 
         canvas {
@@ -167,6 +180,11 @@
             max-width: 800px;
         }
 
+        .v5-strategy-box h3 {
+            color: #b8a878;
+            margin-bottom: 10px;
+        }
+
         .strategy-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -227,6 +245,11 @@
             max-width: 800px;
         }
 
+        .expbox h3 {
+            color: #7a6840;
+            margin-bottom: 8px;
+        }
+
         #pg-out {
             width: 100%;
             height: 150px;
@@ -237,6 +260,28 @@
             font-family: 'Courier New', monospace;
             font-size: 0.8em;
             resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #alert-area {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .alert {
+            background: #2a2010;
+            border: 1px solid #c8a838;
+            color: #e8d080;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
         }
 
         @media (max-width: 600px) {
@@ -250,6 +295,7 @@
     <h1>🎨 PIGMENT v5</h1>
     <div class="v5-badge" id="v5Header">🧠 LOADING... · ... samples</div>
 
+    <!-- Drop Zones -->
     <div id="dropzone">
         <div style="font-size:2em; margin-bottom:10px">🖼️</div>
         <div><strong>Drop image here</strong> or click to browse</div>
@@ -262,6 +308,7 @@
     </div>
     <input type="file" id="pgFile" accept=".pg" hidden>
 
+    <!-- Controls -->
     <div class="controls">
         <button class="primary" id="bstart" disabled>▶ START</button>
         <button id="bpause" disabled>⏸ PAUSE</button>
@@ -270,6 +317,7 @@
         <button id="exportPG">📤 EXPORT</button>
         <button id="toggleEvolved">👁️ Show Evolved</button>
         <button onclick="window.location.href='dashboard.html'">📊 DASHBOARD</button>
+        <button onclick="window.location.href='training.html'">📦 TRAINING</button>
     </div>
 
     <!-- Edge Call Monitor -->
@@ -279,12 +327,23 @@
         <div><span class="badge">⚡</span> Optimization: <span id="optStatus">active</span></div>
     </div>
 
+    <!-- Canvas Panels -->
     <div class="panels">
-        <div class="panel"><div class="plabel">🎯 TARGET</div><canvas id="cvt" width="200" height="200"></canvas></div>
-        <div class="panel"><div class="plabel">📊 DIFF</div><canvas id="cvd" width="200" height="200"></canvas></div>
-        <div class="panel" id="evolved-panel" style="display:none"><div class="plabel">🧬 EVOLVED</div><canvas id="cve" width="200" height="200"></canvas></div>
+        <div class="panel">
+            <div class="plabel">🎯 TARGET</div>
+            <canvas id="cvt" width="200" height="200"></canvas>
+        </div>
+        <div class="panel">
+            <div class="plabel">📊 DIFF</div>
+            <canvas id="cvd" width="200" height="200"></canvas>
+        </div>
+        <div class="panel" id="evolved-panel" style="display:none">
+            <div class="plabel">🧬 EVOLVED</div>
+            <canvas id="cve" width="200" height="200"></canvas>
+        </div>
     </div>
 
+    <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-item"><span class="sv" id="sg">0</span><span class="sl">GENERATIONS</span></div>
         <div class="stat-item"><span class="sv" id="sf">0.00%</span><span class="sl">FITNESS</span></div>
@@ -296,11 +355,13 @@
         <div class="stat-item"><span class="sv" id="sc">0%</span><span class="sl">CONFIDENCE</span></div>
     </div>
 
+    <!-- Progress Bar -->
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <canvas id="crv"></canvas>
 
+    <!-- Strategy Box -->
     <div class="v5-strategy-box">
-        <h3 style="color:#b8a878; margin-bottom:10px;">🧠 v5 ALGORITHM DECISIONS</h3>
+        <h3>🧠 v5 ALGORITHM DECISIONS</h3>
         <div class="strategy-grid">
             <div class="strategy-card">
                 <div class="strategy-label">STRATEGY</div>
@@ -325,10 +386,11 @@
         </div>
     </div>
 
+    <!-- Genome Display -->
     <div class="expbox">
         <h3>🧬 CURRENT GENOME</h3>
         <textarea id="pg-out" readonly placeholder="Genome will appear here..."></textarea>
-        <div class="controls" style="margin-top:10px">
+        <div class="row">
             <button onclick="copyGenome()">📋 Copy</button>
             <button onclick="savePNG()">🖼️ PNG</button>
             <button onclick="refreshGenome()">🔄 Refresh</button>
@@ -337,6 +399,7 @@
 
     <div id="alert-area"></div>
 
+    <!-- Scripts -->
     <script src="js/utils/geometry.js"></script>
     <script src="js/utils/color-utils.js"></script>
     <script src="js/utils/image-utils.js"></script>
@@ -359,55 +422,38 @@
 
         function toggleEvolved() {
             evolvedVisible = !evolvedVisible;
-            document.getElementById('evolved-panel').style.display = evolvedVisible ? 'block' : 'none';
-            document.getElementById('toggleEvolved').textContent = evolvedVisible ? '👁️ Hide Evolved' : '👁️ Show Evolved';
+            const panel = document.getElementById('evolved-panel');
+            const btn = document.getElementById('toggleEvolved');
+            if (panel) {
+                panel.style.display = evolvedVisible ? 'block' : 'none';
+                btn.textContent = evolvedVisible ? '👁️ Hide Evolved' : '👁️ Show Evolved';
+            }
         }
 
-        // REAL data fetch from Supabase
         async function refreshStats() {
             try {
-                // Get training samples
                 const samplesRes = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
                     headers: { 'apikey': SUPABASE_ANON_KEY }
                 });
                 const samples = await samplesRes.json();
                 
-                // Get Q-states
                 const qRes = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
                     headers: { 'apikey': SUPABASE_ANON_KEY }
                 });
                 const qstates = await qRes.json();
 
-                // Update header
                 document.getElementById('v5Header').innerHTML = 
                     `🧠 ${qstates.length} Q-states · ${samples.length.toLocaleString()} samples · B&W: 98%`;
                 
-                // Update stats grid
                 document.getElementById('sq').textContent = qstates.length;
                 
-                // Calculate confidence based on sample size
                 const confidence = Math.min(99, Math.floor(samples.length / 4660));
                 document.getElementById('sc').textContent = confidence + '%';
                 
-                document.getElementById('sbw').textContent = '98%'; // From your training data
-
-                // Calculate mutation rates from real data
-                const stats = {};
-                samples.slice(0, 1000).forEach(row => { // Sample last 1000 for speed
-                    const op = row.operator_used || 'unknown';
-                    if (!stats[op]) stats[op] = { attempts: 0, successes: 0 };
-                    stats[op].attempts++;
-                    if (row.mutation_success) stats[op].successes++;
-                });
-
-                // Update bias display
-                if (stats.scale) {
-                    const rate = (stats.scale.successes / stats.scale.attempts * 100).toFixed(1);
-                    document.getElementById('v5-bias-rate').textContent = rate + '% success';
-                }
+                document.getElementById('sbw').textContent = '98%';
 
             } catch (e) {
-                console.log('Using fallback stats:', e);
+                console.log('Using fallback stats');
                 document.getElementById('v5Header').innerHTML = '🧠 56 Q-states · 171k samples · B&W: 98%';
                 document.getElementById('sq').textContent = '56';
                 document.getElementById('sc').textContent = '94%';
@@ -415,13 +461,11 @@
             }
         }
 
-        // Update strategy based on current evolution
         function updateStrategy() {
             if (window.Pigment?.evolution) {
                 const stats = window.Pigment.evolution.getStats();
                 const fitness = stats.fitness;
                 
-                // Strategy based on fitness
                 let strategy = 'Exploring';
                 let stage = 'early stage';
                 if (fitness > 60) { strategy = 'Refining'; stage = 'mid stage'; }
@@ -431,7 +475,6 @@
                 document.getElementById('v5-stage').textContent = stage;
                 document.getElementById('v5-polygons').textContent = stats.polygons;
                 
-                // Image type from intelligence
                 if (window.Pigment.intelligence?.face) {
                     document.getElementById('v5-imagetype').textContent = 'portrait';
                     document.getElementById('v5-face').textContent = 'face detected';
@@ -445,10 +488,9 @@
         // Edge call monitor
         setInterval(() => {
             if (window.SupabaseClient) {
-                const stats = window.SupabaseClient.getCallStats();
+                const stats = window.SupabaseClient.getCallStats?.() || { today: 0 };
                 document.getElementById('edgeCalls').textContent = stats.today;
                 
-                // Calculate savings (assuming 90% reduction)
                 const estimatedWithoutOpt = stats.today * 10;
                 const savings = stats.today > 0 ? 
                     Math.min(99, Math.floor((1 - stats.today/estimatedWithoutOpt) * 100)) : 90;
@@ -457,32 +499,91 @@
         }, 5000);
 
         // Initialize
-        document.getElementById('toggleEvolved').addEventListener('click', toggleEvolved);
-        document.getElementById('exportPG').addEventListener('click', () => Pigment?.exportPG());
+        document.getElementById('toggleEvolved')?.addEventListener('click', toggleEvolved);
+        document.getElementById('exportPG')?.addEventListener('click', () => Pigment?.exportPG());
 
-        // Real-time updates
+        // REAL DROP ZONE HANDLERS - FIXED
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image drop zone
+            const dz = document.getElementById('dropzone');
+            const fi = document.getElementById('fi');
+            
+            if (dz) {
+                dz.addEventListener('click', () => fi?.click());
+                
+                dz.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dz.classList.add('over');
+                });
+                
+                dz.addEventListener('dragleave', () => {
+                    dz.classList.remove('over');
+                });
+                
+                dz.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dz.classList.remove('over');
+                    const file = e.dataTransfer.files[0];
+                    if (file && window.Pigment) {
+                        setTimeout(() => window.Pigment.loadImage(file), 100);
+                    }
+                });
+            }
+            
+            if (fi) {
+                fi.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file && window.Pigment) {
+                        window.Pigment.loadImage(file);
+                    }
+                });
+            }
+
+            // PG drop zone
+            const pgdz = document.getElementById('pgLoader');
+            const pgFile = document.getElementById('pgFile');
+            
+            if (pgdz) {
+                pgdz.addEventListener('click', () => pgFile?.click());
+                
+                pgdz.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    pgdz.classList.add('over');
+                });
+                
+                pgdz.addEventListener('dragleave', () => {
+                    pgdz.classList.remove('over');
+                });
+                
+                pgdz.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    pgdz.classList.remove('over');
+                    const file = e.dataTransfer.files[0];
+                    if (file && window.Pigment) {
+                        setTimeout(() => window.Pigment.loadPG(file), 100);
+                    }
+                });
+            }
+            
+            if (pgFile) {
+                pgFile.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file && window.Pigment) {
+                        window.Pigment.loadPG(file);
+                    }
+                });
+            }
+        });
+
+        // Start periodic updates
         refreshStats();
         setInterval(refreshStats, 30000);
         setInterval(updateStrategy, 1000);
 
-        // Drop zone handlers
-        const dz = document.getElementById('dropzone');
-        dz.addEventListener('click', () => document.getElementById('fi').click());
-        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
-        dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-        dz.addEventListener('drop', e => {
-            e.preventDefault(); dz.classList.remove('over');
-            if (e.dataTransfer.files[0]) Pigment?.loadImage(e.dataTransfer.files[0]);
-        });
-
-        const pgdz = document.getElementById('pgLoader');
-        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
-        pgdz.addEventListener('dragover', e => { e.preventDefault(); pgdz.classList.add('over'); });
-        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
-        pgdz.addEventListener('drop', e => {
-            e.preventDefault(); pgdz.classList.remove('over');
-            if (e.dataTransfer.files[0]) Pigment?.loadPG(e.dataTransfer.files[0]);
-        });
+        // Helper functions
+        function copyGenome() { Pigment?.copyGenome?.(); }
+        function savePNG() { Pigment?.exportImage?.('png'); }
+        function refreshGenome() { Pigment?.refreshGenome?.(); }
     </script>
 </body>
 </html>
