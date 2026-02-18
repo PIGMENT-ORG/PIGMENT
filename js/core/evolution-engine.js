@@ -4,6 +4,13 @@ const EvolutionEngine = {
     fitnessHistory:[],structHistory:[],
     config:{width:200,height:200,targetData:null,intelligence:null,supabase:null,maxPolygonSize:0.15,minPolygonSize:0.005},
     
+    // Batching queues
+    pendingRecords: [],
+    pendingRLUpdates: [],
+    lastRecordedFitness: 0,
+    lastQUpdateGen: 0,
+    edgeCallCount: 0,
+    
     init(config){Object.assign(this.config,config);this.reset();return this;},
     
     reset(){
@@ -12,6 +19,8 @@ const EvolutionEngine = {
         this.bestError=this.evaluate(this.polygons);this.generation=0;this.improvements=0;
         this.mutationRate=1.0;this.lastImprovementGen=0;this.plateauCount=0;
         this.fitnessHistory=[];this.structHistory=[];
+        this.pendingRecords = [];
+        this.pendingRLUpdates = [];
         return this.bestError;
     },
     
@@ -44,29 +53,51 @@ const EvolutionEngine = {
         let impr=0;
         for(let i=0;i<speed;i++){const r=this.mutateOne();if(r.improved)impr++;}
         
+        // Flush batches every 100 generations
         if(this.generation % 100 === 0) {
+            this.flushBatches();
+        }
+        
+        // Save embedding only every 500 gens (was 100)
+        if(this.generation % 500 === 0) {
             this.saveImageEmbedding();
         }
         
         return {generation:this.generation,error:this.bestError,improvements:impr,fitness:this.getFitness()};
     },
     
+    async flushBatches() {
+        // Batch training data
+        if (this.pendingRecords.length > 0) {
+            await this.config.supabase.batchLearn(this.pendingRecords);
+            this.pendingRecords = [];
+        }
+        
+        // Batch RL updates
+        if (this.pendingRLUpdates.length > 0) {
+            await this.config.supabase.batchRLUpdate(this.pendingRLUpdates);
+            this.pendingRLUpdates = [];
+        }
+    },
+    
     async selectMutation() {
         const f = this.getFitness();
         const state = {
             fitness: Math.floor(f / 10) * 10,
+            density: this.calculateDensity(),
             plateau: this.plateauCount > 500 ? 'stuck' : 'moving',
-            stage: f < 30 ? 'early' : f < 60 ? 'mid' : 'late',
-            polygonCount: this.polygons.length
+            polyRatio: this.polygons.length / parseInt(document.getElementById('selpoly')?.value || '50')
         };
         
-        if (this.config.supabase && this.config.supabase.enabled) {
+        // Only query RL every 5 generations (cache locally)
+        if (this.generation % 5 === 0 && this.config.supabase && this.config.supabase.enabled) {
             const rlResult = await this.config.supabase.selectMutation(state);
-            if (rlResult.source === 'rl' && rlResult.action) {
-                console.log('RL chose:', rlResult.action);
-                return rlResult.action;
-            }
+            this.cachedAction = rlResult.action;
+            return rlResult.action;
         }
+        
+        // Use cached action between RL queries
+        if (this.cachedAction) return this.cachedAction;
         
         if(this.config.intelligence && f<80 && Math.random()<0.15) return 'intelligent';
         if(this.plateauCount>1000){const r=Math.random();if(r<0.4)return'translate';if(r<0.7)return'scale';return'rotate';}
@@ -74,10 +105,10 @@ const EvolutionEngine = {
         const r=Math.random();if(r<0.35)return'translate';if(r<0.60)return'scale';if(r<0.80)return'rotate';if(r<0.95)return'color';return'opacity';
     },
     
-    async mutateOne(){
+    mutateOne(){
         const idx=Math.floor(Math.random()*this.polygons.length);
         const candidate=this.clone(this.polygons);
-        const mtype=await this.selectMutation();
+        const mtype=this.selectMutation();
         const mutation=MutationRegistry.get(mtype);
         const ctx={W:this.config.width,H:this.config.height,generation:this.generation,fitness:this.getFitness(),temperature:parseFloat(document.getElementById('temperature')?.value||'1'),intelligence:this.config.intelligence,allPolygons:this.polygons};
         candidate[idx]=mutation.mutate(this.polygons[idx],ctx);
@@ -91,25 +122,16 @@ const EvolutionEngine = {
         const offspringFitness = 100 * (1 - error / (255*255*3*this.config.width*this.config.height));
         const improved = error < this.bestError;
         
-        const reward = improved ? 1.0 : -0.1;
-        
-        const currentState = {
-            fitness: Math.floor(parentFitness / 10) * 10,
-            plateau: this.plateauCount > 500 ? 'stuck' : 'moving',
-            stage: parentFitness < 30 ? 'early' : parentFitness < 60 ? 'mid' : 'late',
-            polygonCount: this.polygons.length
-        };
-        
-        const nextState = {
-            fitness: Math.floor(offspringFitness / 10) * 10,
-            plateau: improved ? 'moving' : (this.plateauCount + 1 > 500 ? 'stuck' : 'moving'),
-            stage: offspringFitness < 30 ? 'early' : offspringFitness < 60 ? 'mid' : 'late',
-            polygonCount: this.polygons.length
-        };
-        
-        if (this.config.supabase && this.config.supabase.enabled) {
-            this.config.supabase.updateRL(currentState, mtype, reward, nextState)
-                .catch(err => console.log('RL update err:', err));
+        // Only record every 10th generation (90% reduction)
+        if (this.generation % 10 === 0) {
+            this.pendingRecords.push({
+                operator: mtype,
+                success: improved,
+                parentFitness: parentFitness,
+                offspringFitness: offspringFitness,
+                generation: this.generation,
+                fitness: offspringFitness
+            });
         }
         
         if(improved){
@@ -117,60 +139,18 @@ const EvolutionEngine = {
             this.bestError=error;this.improvements++;this.lastImprovementGen=this.generation;
             this.plateauCount=0;this.mutationRate=Math.max(0.3,this.mutationRate*0.998);
             
-            this.recordTrainingData({
-                operator: mtype,
-                success: true,
-                parentFitness: parentFitness,
-                offspringFitness: offspringFitness,
-                generation: this.generation,
-                polygonCount: this.polygons.length,
-                features: {
-                    fitness: offspringFitness,
-                    plateauCount: this.plateauCount
-                }
-            });
-            
             this.generation++;return{accepted:true,improved:true};
         }
-        
-        this.recordTrainingData({
-            operator: mtype,
-            success: false,
-            parentFitness: parentFitness,
-            offspringFitness: offspringFitness,
-            generation: this.generation,
-            polygonCount: this.polygons.length,
-            features: {
-                fitness: parentFitness,
-                plateauCount: this.plateauCount
-            }
-        });
         
         this.plateauCount++;this.mutationRate=Math.min(1.5,this.mutationRate*1.001);
         this.generation++;return{accepted:false,improved:false};
     },
     
-    async recordTrainingData(data) {
-        if (!this.config.supabase || !this.config.supabase.enabled) return;
-        
-        try {
-            await this.config.supabase.learnFromEvolution({
-                operator: data.operator,
-                improved: data.success,
-                parentFitness: data.parentFitness,
-                offspringFitness: data.offspringFitness,
-                generation: data.generation,
-                polygonCount: data.polygonCount,
-                fitness: data.offspringFitness,
-                features: data.features,
-                styleCategory: 'general'
-            });
-        } catch (err) {
-            console.log('ML recording:', err.message);
-        }
-    },
-    
     async saveImageEmbedding() {
+        // DISABLED temporarily to save edge calls
+        return;
+        
+        /* Original code - enable when needed
         if (!this.config.supabase || !this.config.supabase.enabled) return;
         if (this.generation % 100 !== 0) return;
         if (this.getFitness() < 30) return;
@@ -210,6 +190,7 @@ const EvolutionEngine = {
                             type: 'embedding',
                             generation: this.generation,
                             fitness: this.getFitness(),
+                            density: this.calculateDensity(),
                             embedding: embedding,
                             sessionId: this.config.supabase.sessionId
                         }
@@ -219,6 +200,24 @@ const EvolutionEngine = {
         } catch (err) {
             console.log('Embedding save failed:', err);
         }
+        */
+    },
+    
+    calculateDensity() {
+        if (!this.bestPolys || this.bestPolys.length === 0) return 0;
+        let covered = 0;
+        const samples = 100;
+        for (let i = 0; i < samples; i++) {
+            const x = Math.random() * this.config.width;
+            const y = Math.random() * this.config.height;
+            for (const p of this.bestPolys) {
+                if (Geometry.pointInTriangle(x, y, p.pts)) {
+                    covered++;
+                    break;
+                }
+            }
+        }
+        return covered / samples;
     },
     
     getFitness(){return 100*(1-this.bestError/(255*255*3*this.config.width*this.config.height));},
