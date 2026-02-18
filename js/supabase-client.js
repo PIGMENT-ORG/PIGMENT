@@ -46,7 +46,7 @@ const SupabaseClient = {
         }
     },
     
-    // Select best mutation using RL
+    // Select mutation using RL
     async selectMutation(state) {
         if (!this.enabled) return { action: 'random', source: 'local' }
         
@@ -62,10 +62,9 @@ const SupabaseClient = {
                     state: state
                 })
             })
-            
             return await response.json()
         } catch (err) {
-            console.error('Mutation selection failed:', err)
+            console.error('RL selection failed:', err)
             return { action: 'random', source: 'local' }
         }
     },
@@ -172,7 +171,6 @@ const SupabaseClient = {
         if (!this.enabled) return
         
         try {
-            // Using fetch directly since we don't have supabase-js client
             const response = await fetch(`${this.url}/rest/v1/user_feedback`, {
                 method: 'POST',
                 headers: {
