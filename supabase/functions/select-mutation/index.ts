@@ -13,8 +13,12 @@ const EXPLORATION_RATE = 0.2
 const ACTIONS = ['translate', 'scale', 'rotate', 'color', 'opacity', 'intelligent']
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
   
+  // Initialize Supabase client
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -23,8 +27,8 @@ serve(async (req) => {
   try {
     const { state, lastAction, reward, nextState, mode } = await req.json()
     
+    // Mode: select best action
     if (mode === 'select') {
-      // Select best mutation action
       const stateKey = JSON.stringify(state)
       const { data: qtRow } = await supabase
         .from('rl_q_table')
@@ -35,27 +39,44 @@ serve(async (req) => {
       // Exploration vs exploitation
       if (Math.random() < EXPLORATION_RATE || !qtRow) {
         const action = ACTIONS[Math.floor(Math.random() * ACTIONS.length)]
-        return new Response(JSON.stringify({ action, source: 'random' }), {
+        return new Response(JSON.stringify({ 
+          action, 
+          source: 'random' 
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
       
       // Pick best action from Q-table
       const qValues = qtRow.action_values as Record<string, number>
-      const action = Object.entries(qValues).sort(([,a],[,b]) => b-a)[0]?.[0] || ACTIONS[0]
+      const action = Object.entries(qValues)
+        .sort(([,a], [,b]) => b - a)[0]?.[0] || ACTIONS[0]
       
-      return new Response(JSON.stringify({ action, source: 'rl', qValues }), {
+      return new Response(JSON.stringify({ 
+        action, 
+        source: 'rl', 
+        qValues 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
     
+    // Mode: update Q-table with new experience
     if (mode === 'update') {
-      // Update Q-table with new experience
       const stateKey = JSON.stringify(state)
       const nextKey = JSON.stringify(nextState)
       
-      const { data: current } = await supabase.from('rl_q_table').select('action_values').eq('state_key', stateKey).single()
-      const { data: next } = await supabase.from('rl_q_table').select('action_values').eq('state_key', nextKey).single()
+      const { data: current } = await supabase
+        .from('rl_q_table')
+        .select('action_values')
+        .eq('state_key', stateKey)
+        .single()
+      
+      const { data: next } = await supabase
+        .from('rl_q_table')
+        .select('action_values')
+        .eq('state_key', nextKey)
+        .single()
       
       const qValues = (current?.action_values as Record<string, number>) || {}
       const nextValues = (next?.action_values as Record<string, number>) || {}
@@ -72,7 +93,10 @@ serve(async (req) => {
         last_updated: new Date().toISOString()
       })
       
-      return new Response(JSON.stringify({ updated: true, newQ }), {
+      return new Response(JSON.stringify({ 
+        updated: true, 
+        newQ 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
