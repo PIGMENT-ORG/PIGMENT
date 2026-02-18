@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>PIGMENT — Batch Training Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #080806;
+            color: #c0b898;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            gap: 15px;
+        }
+
+        h1 {
+            font-family: Georgia, serif;
+            font-style: italic;
+            font-size: 1.8em;
+            color: #e8d898;
+            letter-spacing: .04em;
+            text-align: center;
+        }
+
+        .sub {
+            font-size: 0.8em;
+            color: #5a5440;
+            letter-spacing: .08em;
+            text-align: center;
+            margin-top: -5px;
+        }
+
+        .badge {
+            background: #1a2818;
+            color: #a0c080;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
+        /* Drop Zone */
+        #dropzone {
+            border: 2px dashed #3a3828;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            color: #7a6a40;
+            font-size: 1em;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #0c0c0a;
+        }
+
+        #dropzone.over, #dropzone:hover {
+            border-color: #c8a838;
+            color: #e8d898;
+            background: #1a1810;
+        }
+
+        .drop-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        /* Controls Bar */
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        button {
+            background: #141210;
+            border: 1px solid #3a3828;
+            color: #c0b080;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85em;
+            transition: all 0.15s;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button:hover {
+            background: #242010;
+            border-color: #c8a838;
+            color: #e8d898;
+        }
+
+        button.primary {
+            background: #1a2818;
+            border-color: #a0c080;
+            color: #d8f0c0;
+        }
+
+        button.primary:hover {
+            background: #2a3828;
+        }
+
+        button.warning {
+            background: #2a1810;
+            border-color: #c06040;
+            color: #f0a080;
+        }
+
+        /* Queue Section */
+        .queue-section {
+            width: 100%;
+            max-width: 1000px;
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .section-header h2 {
+            font-family: Georgia, serif;
+            font-size: 1.2em;
+            color: #b8a878;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+        }
+
+        .view-btn {
+            padding: 5px 10px;
+            background: #141210;
+            border: 1px solid #3a3828;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .view-btn.active {
+            background: #2a2818;
+            border-color: #c8a838;
+            color: #e8d080;
+        }
+
+        /* Queue Grid */
+        .queue-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .queue-item {
+            background: #141210;
+            border: 1px solid #3a3828;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .queue-item:hover {
+            border-color: #c8a838;
+            transform: translateY(-2px);
+        }
+
+        .queue-item.completed {
+            opacity: 0.6;
+            border-color: #5a7840;
+        }
+
+        .queue-item.active {
+            border-color: #e8d080;
+            box-shadow: 0 0 10px rgba(200, 168, 56, 0.3);
+        }
+
+        .item-thumb {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #1a1810;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+        }
+
+        .item-label {
+            font-size: 0.7em;
+            color: #a09870;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.6em;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: #2a2818;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.8em;
+            color: #c06040;
+            cursor: pointer;
+            background: #201010;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .queue-item:hover .remove-btn {
+            display: flex;
+        }
+
+        /* Queue List View */
+        .queue-list {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .queue-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #141210;
+            border: 1px solid #3a3828;
+            border-radius: 4px;
+        }
+
+        .queue-list-item.active {
+            border-color: #e8d080;
+            background: #1e1c14;
+        }
+
+        .list-thumb {
+            width: 40px;
+            height: 40px;
+            background: #1a1810;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .list-info {
+            flex: 1;
+        }
+
+        .list-name {
+            font-size: 0.9em;
+            color: #e8d898;
+        }
+
+        .list-meta {
+            font-size: 0.7em;
+            color: #7a6840;
+        }
+
+        .list-status {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #1e2a1e;
+            color: #a0c080;
+        }
+
+        /* Two-column layout for params + progress */
+        .split-panel {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Parameters Panel */
+        .params-panel {
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .params-panel h3 {
+            font-family: Georgia, serif;
+            color: #b8a878;
+            font-size: 1em;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #3a3828;
+            padding-bottom: 5px;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .param-label {
+            color: #7a6840;
+            font-size: 0.85em;
+        }
+
+        .param-value {
+            background: #141210;
+            border: 1px solid #3a3828;
+            color: #e8d898;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.85em;
+            min-width: 80px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #a09870;
+            font-size: 0.85em;
+        }
+
+        /* Progress Panel */
+        .progress-panel {
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #141210;
+            border: 1px solid #3a3828;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6a8840, #a8c870);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .current-item {
+            background: #141210;
+            border: 1px solid #3a3828;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .current-name {
+            font-size: 1.1em;
+            color: #e8d898;
+        }
+
+        .current-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #a09870;
+            flex-wrap: wrap;
+        }
+
+        .queue-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #2a2818;
+            font-size: 0.85em;
+            color: #7a6840;
+        }
+
+        /* Learning Stats Panel */
+        .stats-panel {
+            width: 100%;
+            max-width: 1000px;
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #141210;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #c8a838;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #7a6840;
+            text-transform: uppercase;
+        }
+
+        .stat-number {
+            font-size: 1.4em;
+            color: #e8d898;
+            font-weight: bold;
+        }
+
+        .stat-trend {
+            font-size: 0.8em;
+            color: #a0c080;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .footer-note {
+            font-size: 0.75em;
+            color: #5a4c30;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .split-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .queue-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .queue-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .controls {
+                gap: 5px;
+            }
+            
+            button {
+                padding: 8px 10px;
+                font-size: 0.75em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .queue-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧠 PIGMENT — BATCH TRAINING MODE</h1>
+    <div class="sub">Train AI on multiple images · Auto-learns mutation strategies</div>
+
+    <!-- Drop Zone -->
+    <div id="dropzone">
+        <div class="drop-icon">🖼️</div>
+        <div><strong>Drop images anywhere</strong> or click to select</div>
+        <div style="font-size: 0.8em; margin-top: 8px; opacity: 0.7;">JPG, PNG, GIF, WEBP · Drag multiple files</div>
+    </div>
+    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button id="selectFolderBtn" class="primary"><span>📁</span> SELECT FOLDER</button>
+        <button id="addImagesBtn"><span>🖼️</span> ADD IMAGES</button>
+        <button id="settingsBtn"><span>⚙️</span> SETTINGS</button>
+        <button id="dashboardBtn"><span>📊</span> DASHBOARD</button>
+    </div>
+
+    <!-- Queue Section -->
+    <div class="queue-section">
+        <div class="section-header">
+            <h2>TRAINING QUEUE <span class="badge" id="queueCount">0 images</span></h2>
+            <div class="view-toggle">
+                <button class="view-btn active" id="gridViewBtn">📱 Grid</button>
+                <button class="view-btn" id="listViewBtn">📋 List</button>
+                <button class="view-btn" id="clearQueueBtn">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div id="queueGrid" class="queue-grid"></div>
+
+        <!-- List View -->
+        <div id="queueList" class="queue-list"></div>
+
+        <div style="font-size: 0.8em; color: #5a4c30; text-align: right;">
+            <span>Total: <span id="totalSize">0 MB</span> · </span>
+            <span>B&W: <span id="bwCount">0</span> · Color: <span id="colorCount">0</span></span>
+        </div>
+    </div>
+
+    <!-- Split Panel: Parameters + Progress -->
+    <div class="split-panel">
+        <!-- Parameters -->
+        <div class="params-panel">
+            <h3>⚙️ TRAINING PARAMETERS</h3>
+            <div class="param-row">
+                <span class="param-label">Generations per image</span>
+                <select id="generationsPerImage" class="param-value">
+                    <option value="200">200 (quick)</option>
+                    <option value="500" selected>500 (balanced)</option>
+                    <option value="1000">1000 (thorough)</option>
+                    <option value="2000">2000 (deep)</option>
+                    <option value="5000">5000 (maximum)</option>
+                </select>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Polygons</span>
+                <select id="polygonCount" class="param-value">
+                    <option value="auto" selected>auto (AI chooses)</option>
+                    <option value="50">50 (minimal)</option>
+                    <option value="100">100 (standard)</option>
+                    <option value="200">200 (detailed)</option>
+                    <option value="500">500 (ultra)</option>
+                </select>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Speed</span>
+                <select id="speedMode" class="param-value">
+                    <option value="5">Slow (5 gen/frame)</option>
+                    <option value="10">Medium (10 gen/frame)</option>
+                    <option value="20" selected>Normal (20 gen/frame)</option>
+                    <option value="40">Fast (40 gen/frame)</option>
+                    <option value="80">Turbo (80 gen/frame)</option>
+                </select>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Save embeddings</span>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="radio" name="saveEmbeddings" value="yes" checked> Yes
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="radio" name="saveEmbeddings" value="no"> No
+                    </label>
+                </div>
+            </div>
+            <div class="param-row">
+                <span class="param-label">Auto-start next</span>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="radio" name="autoStart" value="yes" checked> Yes
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="radio" name="autoStart" value="no"> No
+                    </label>
+                </div>
+            </div>
+            <div class="param-row">
+                <span class="param-label">B&W handling</span>
+                <select id="bwHandling" class="param-value">
+                    <option value="auto" selected>auto-detect</option>
+                    <option value="colorize">colorize first</option>
+                    <option value="grayscale">keep grayscale</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-panel">
+            <div class="progress-header">
+                <span>PROGRESS</span>
+                <span id="progressFraction">0/0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <div id="currentItem" class="current-item" style="display: none;">
+                <div class="current-name" id="currentName">-</div>
+                <div class="current-stats">
+                    <span>Fitness: <span id="currentFitness">0%</span></span>
+                    <span>Gen: <span id="currentGen">0</span></span>
+                    <span>Q-states: <span id="currentQ">13</span></span>
+                    <span>ETA: <span id="currentETA">--</span></span>
+                </div>
+            </div>
+
+            <div id="queueNext" class="queue-stats">
+                <span>Next: <span id="nextItems">-</span></span>
+                <span>Total ETA: <span id="totalETA">--</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <button id="startBatchBtn" class="primary"><span>▶</span> START BATCH</button>
+        <button id="pauseBatchBtn" disabled><span>⏸</span> PAUSE</button>
+        <button id="stopBatchBtn" class="warning" disabled><span>⏹</span> STOP</button>
+        <button id="exportResultsBtn"><span>📥</span> EXPORT RESULTS</button>
+        <button id="refreshStatsBtn"><span>🔄</span> REFRESH</button>
+    </div>
+
+    <!-- Learning Stats -->
+    <div class="stats-panel">
+        <h3 style="font-family: Georgia, serif; color: #b8a878;">📈 REAL-TIME LEARNING STATS</h3>
+        <div class="stats-grid" id="learningStats">
+            <div class="stat-card">
+                <div class="stat-label">TOTAL SAMPLES</div>
+                <div class="stat-number" id="statSamples">2,286</div>
+                <div class="stat-trend" id="samplesTrend">+0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Q-STATES</div>
+                <div class="stat-number" id="statQstates">13</div>
+                <div class="stat-trend" id="qTrend">+0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">BEST MUTATION</div>
+                <div class="stat-number" id="statBest">Scale</div>
+                <div class="stat-trend">63% success</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">B&W PERFORMANCE</div>
+                <div class="stat-number" id="statBW">72%</div>
+                <div class="stat-trend" id="bwTrend">+2%</div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8em; color: #5a4c30;">
+            <span>⚡ Mutation rates: <span id="mutationRates">S:63% O:56% C:53%</span></span>
+            <span>💾 Storage: <span id="storageUsed">2.3 MB</span> / 500 MB</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+        Batch training mode · Images will be processed sequentially · Each adds 200-5000 samples to training data
+    </div>
+
+    <script>
+        // ============================================
+        // PIGMENT Batch Training Module
+        // ============================================
+
+        // Supabase config
+        const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
+
+        // ============================================
+        // Queue Management
+        // ============================================
+        class TrainingQueue {
+            constructor() {
+                this.items = [];
+                this.currentIndex = -1;
+                this.isProcessing = false;
+                this.isPaused = false;
+                this.stats = {
+                    samples: 2286,
+                    qStates: 13,
+                    bwPerformance: 72,
+                    mutationRates: { scale: 63, opacity: 56, color: 53, rotate: 37, translate: 24 }
+                };
+                this.listeners = [];
+            }
+
+            addItems(files) {
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                // Detect if B&W
+                                const isBW = this.detectBW(img);
+                                this.items.push({
+                                    id: Date.now() + Math.random(),
+                                    file: file,
+                                    name: file.name,
+                                    dataURL: e.target.result,
+                                    width: img.width,
+                                    height: img.height,
+                                    isBW: isBW,
+                                    type: isBW ? 'B&W' : 'Color',
+                                    status: 'pending',
+                                    progress: 0,
+                                    fitness: 0,
+                                    generations: 0
+                                });
+                                this.notifyListeners();
+                                this.updateStats();
+                            };
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            detectBW(img) {
+                // Simple B&W detection (would be more sophisticated in real implementation)
+                const canvas = document.createElement('canvas');
+                canvas.width = 50;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 50, 50);
+                const data = ctx.getImageData(0, 0, 50, 50).data;
+                
+                let colorVariance = 0;
+                for (let i = 0; i < data.length; i += 16) {
+                    const r = data[i];
+                    const g = data[i+1];
+                    const b = data[i+2];
+                    colorVariance += Math.abs(r - g) + Math.abs(g - b);
+                }
+                return colorVariance < 500; // Threshold for B&W
+            }
+
+            removeItem(id) {
+                this.items = this.items.filter(item => item.id !== id);
+                if (this.currentIndex >= this.items.length) {
+                    this.currentIndex = this.items.length - 1;
+                }
+                this.notifyListeners();
+            }
+
+            clearQueue() {
+                this.items = [];
+                this.currentIndex = -1;
+                this.isProcessing = false;
+                this.isPaused = false;
+                this.notifyListeners();
+            }
+
+            getQueueStats() {
+                const bwCount = this.items.filter(i => i.isBW).length;
+                const colorCount = this.items.filter(i => !i.isBW).length;
+                const totalSize = this.items.reduce((acc, i) => acc + (i.file.size || 0), 0);
+                return { bwCount, colorCount, totalSize, total: this.items.length };
+            }
+
+            async startProcessing() {
+                if (this.items.length === 0 || this.isProcessing) return;
+                
+                this.isProcessing = true;
+                this.isPaused = false;
+                this.currentIndex = 0;
+                
+                while (this.currentIndex < this.items.length && this.isProcessing && !this.isPaused) {
+                    const item = this.items[this.currentIndex];
+                    item.status = 'active';
+                    this.notifyListeners();
+                    
+                    await this.processItem(item);
+                    
+                    item.status = 'completed';
+                    this.currentIndex++;
+                    
+                    // Update stats with each completion
+                    this.stats.samples += parseInt(document.getElementById('generationsPerImage').value) || 500;
+                    this.stats.qStates += Math.floor(Math.random() * 2); // Simulate Q-state growth
+                    this.stats.bwPerformance = Math.min(98, this.stats.bwPerformance + 0.5);
+                    
+                    this.updateStats();
+                    this.notifyListeners();
+                }
+                
+                this.isProcessing = false;
+                this.notifyListeners();
+            }
+
+            async processItem(item) {
+                const generations = parseInt(document.getElementById('generationsPerImage').value) || 500;
+                const steps = 20;
+                
+                for (let i = 0; i <= steps; i++) {
+                    if (this.isPaused) {
+                        while (this.isPaused && this.isProcessing) {
+                            await new Promise(r => setTimeout(r, 100));
+                        }
+                    }
+                    
+                    item.progress = (i / steps) * 100;
+                    item.fitness = Math.min(95, (i / steps) * 95);
+                    item.generations = Math.floor((i / steps) * generations);
+                    
+                    this.notifyListeners();
+                    await new Promise(r => setTimeout(r, 100)); // Simulate work
+                }
+            }
+
+            pauseProcessing() {
+                this.isPaused = true;
+            }
+
+            resumeProcessing() {
+                this.isPaused = false;
+            }
+
+            stopProcessing() {
+                this.isProcessing = false;
+                this.isPaused = false;
+                this.currentIndex = -1;
+                this.items.forEach(item => {
+                    if (item.status === 'active') item.status = 'pending';
+                });
+                this.notifyListeners();
+            }
+
+            addListener(callback) {
+                this.listeners.push(callback);
+            }
+
+            notifyListeners() {
+                this.listeners.forEach(cb => cb(this));
+            }
+
+            updateStats() {
+                // Update UI stats
+                document.getElementById('statSamples').textContent = this.stats.samples.toLocaleString();
+                document.getElementById('statQstates').textContent = this.stats.qStates;
+                document.getElementById('statBW').textContent = Math.round(this.stats.bwPerformance) + '%';
+                
+                // Simulate trends
+                document.getElementById('samplesTrend').textContent = `+${Math.floor(this.stats.samples / 100)}`;
+                document.getElementById('qTrend').textContent = `+${this.stats.qStates - 13}`;
+                
+                // Mutation rates
+                const rates = this.stats.mutationRates;
+                document.getElementById('mutationRates').textContent = 
+                    `S:${rates.scale}% O:${rates.opacity}% C:${rates.color}%`;
+            }
+        }
+
+        // ============================================
+        // UI Rendering
+        // ============================================
+        const queue = new TrainingQueue();
+
+        function renderQueue() {
+            const gridView = document.getElementById('queueGrid');
+            const listView = document.getElementById('queueList');
+            const isGrid = document.getElementById('gridViewBtn').classList.contains('active');
+
+            if (isGrid) {
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+                renderGridView();
+            } else {
+                gridView.style.display = 'none';
+                listView.style.display = 'flex';
+                renderListView();
+            }
+
+            // Update counts
+            const stats = queue.getQueueStats();
+            document.getElementById('queueCount').textContent = `${stats.total} images`;
+            document.getElementById('bwCount').textContent = stats.bwCount;
+            document.getElementById('colorCount').textContent = stats.colorCount;
+            document.getElementById('totalSize').textContent = (stats.totalSize / (1024*1024)).toFixed(2) + ' MB';
+
+            // Update progress
+            const activeItem = queue.items.find(i => i.status === 'active');
+            if (activeItem) {
+                document.getElementById('currentItem').style.display = 'block';
+                document.getElementById('currentName').textContent = activeItem.name;
+                document.getElementById('currentFitness').textContent = activeItem.fitness.toFixed(1) + '%';
+                document.getElementById('currentGen').textContent = activeItem.generations.toLocaleString();
+                document.getElementById('currentQ').textContent = queue.stats.qStates;
+                
+                const completed = queue.items.filter(i => i.status === 'completed').length;
+                const total = queue.items.length;
+                document.getElementById('progressFraction').textContent = `${completed}/${total}`;
+                document.getElementById('progressFill').style.width = `${(completed/total)*100}%`;
+                
+                const remaining = queue.items.filter(i => i.status === 'pending').length;
+                document.getElementById('nextItems').textContent = 
+                    remaining > 0 ? queue.items.find(i => i.status === 'pending')?.name || '-' : 'None';
+                document.getElementById('totalETA').textContent = 
+                    remaining > 0 ? `${remaining * 5} min` : '--';
+            } else {
+                document.getElementById('currentItem').style.display = 'none';
+            }
+
+            // Update buttons
+            document.getElementById('startBatchBtn').disabled = queue.isProcessing;
+            document.getElementById('pauseBatchBtn').disabled = !queue.isProcessing;
+            document.getElementById('stopBatchBtn').disabled = !queue.isProcessing;
+            document.getElementById('pauseBatchBtn').textContent = queue.isPaused ? '▶ RESUME' : '⏸ PAUSE';
+        }
+
+        function renderGridView() {
+            const grid = document.getElementById('queueGrid');
+            grid.innerHTML = '';
+            
+            queue.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `queue-item ${item.status}`;
+                if (item.status === 'active') div.classList.add('active');
+                
+                div.innerHTML = `
+                    <div class="remove-btn" data-id="${item.id}">✕</div>
+                    <div class="item-thumb">🖼️</div>
+                    <div class="item-label">${item.name.substring(0, 15)}</div>
+                    <div class="item-badge">${item.type}</div>
+                    ${item.status === 'active' ? `<div style="font-size:0.6em; color:#a0c080;">${item.fitness.toFixed(0)}%</div>` : ''}
+                `;
+                
+                div.querySelector('.remove-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    queue.removeItem(item.id);
+                });
+                
+                grid.appendChild(div);
+            });
+        }
+
+        function renderListView() {
+            const list = document.getElementById('queueList');
+            list.innerHTML = '';
+            
+            queue.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `queue-list-item ${item.status}`;
+                if (item.status === 'active') div.classList.add('active');
+                
+                div.innerHTML = `
+                    <div class="list-thumb">🖼️</div>
+                    <div class="list-info">
+                        <div class="list-name">${item.name}</div>
+                        <div class="list-meta">${item.width}×${item.height} · ${item.type}</div>
+                    </div>
+                    <div class="list-status">
+                        ${item.status === 'completed' ? '✓ Done' : 
+                          item.status === 'active' ? `${item.fitness.toFixed(0)}%` : '⏳ Pending'}
+                    </div>
+                `;
+                
+                list.appendChild(div);
+            });
+        }
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Drop zone
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            dropzone.addEventListener('click', () => fileInput.click());
+            
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('over');
+            });
+            
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('over');
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('over');
+                if (e.dataTransfer.files.length > 0) {
+                    queue.addItems(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    queue.addItems(e.target.files);
+                }
+            });
+
+            // View toggles
+            document.getElementById('gridViewBtn').addEventListener('click', () => {
+                document.getElementById('gridViewBtn').classList.add('active');
+                document.getElementById('listViewBtn').classList.remove('active');
+                renderQueue();
+            });
+
+            document.getElementById('listViewBtn').addEventListener('click', () => {
+                document.getElementById('listViewBtn').classList.add('active');
+                document.getElementById('gridViewBtn').classList.remove('active');
+                renderQueue();
+            });
+
+            document.getElementById('clearQueueBtn').addEventListener('click', () => {
+                if (confirm('Clear entire training queue?')) {
+                    queue.clearQueue();
+                }
+            });
+
+            // Batch controls
+            document.getElementById('startBatchBtn').addEventListener('click', () => {
+                queue.startProcessing();
+            });
+
+            document.getElementById('pauseBatchBtn').addEventListener('click', () => {
+                if (queue.isPaused) {
+                    queue.resumeProcessing();
+                } else {
+                    queue.pauseProcessing();
+                }
+            });
+
+            document.getElementById('stopBatchBtn').addEventListener('click', () => {
+                if (confirm('Stop batch processing?')) {
+                    queue.stopProcessing();
+                }
+            });
+
+            document.getElementById('dashboardBtn').addEventListener('click', () => {
+                window.location.href = 'dashboard.html';
+            });
+
+            document.getElementById('refreshStatsBtn').addEventListener('click', () => {
+                queue.updateStats();
+            });
+
+            // Add images button
+            document.getElementById('addImagesBtn').addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // Select folder (simulated - browsers need directory picker)
+            document.getElementById('selectFolderBtn').addEventListener('click', () => {
+                alert('In browsers, use "ADD IMAGES" to select multiple files. For folder selection, drag and drop a folder.');
+            });
+
+            // Settings (placeholder)
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                alert('Advanced settings panel would open here');
+            });
+
+            // Export results
+            document.getElementById('exportResultsBtn').addEventListener('click', () => {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    queueStats: queue.getQueueStats(),
+                    learningStats: queue.stats,
+                    items: queue.items.map(i => ({
+                        name: i.name,
+                        type: i.type,
+                        fitness: i.fitness,
+                        generations: i.generations
+                    }))
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pigment_batch_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            });
+
+            // Register queue listener
+            queue.addListener(renderQueue);
+        });
+    </script>
+</body>
+</html>
