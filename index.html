@@ -415,241 +415,236 @@
     <script src="js/core/pigment.js"></script>
 
     <script>
-    const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
+        const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-    let evolvedVisible = false;
+        let evolvedVisible = false;
 
-    function toggleEvolved() {
-        evolvedVisible = !evolvedVisible;
-        const panel = document.getElementById('evolved-panel');
-        const btn = document.getElementById('toggleEvolved');
-        if (panel) {
-            panel.style.display = evolvedVisible ? 'block' : 'none';
-            btn.textContent = evolvedVisible ? '👁️ Hide Evolved' : '👁️ Show Evolved';
-        }
-    }
-
-    async function refreshStats() {
-        try {
-            const samplesRes = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
-                headers: { 'apikey': SUPABASE_ANON_KEY }
-            });
-            const samples = await samplesRes.json();
-            
-            const qRes = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
-                headers: { 'apikey': SUPABASE_ANON_KEY }
-            });
-            const qstates = await qRes.json();
-
-            document.getElementById('v5Header').innerHTML = 
-                `🧠 ${qstates.length} Q-states · ${samples.length.toLocaleString()} samples · B&W: 98%`;
-            
-            document.getElementById('sq').textContent = qstates.length;
-            
-            const confidence = Math.min(99, Math.floor(samples.length / 4660));
-            document.getElementById('sc').textContent = confidence + '%';
-            
-            document.getElementById('sbw').textContent = '98%';
-
-        } catch (e) {
-            console.log('Using fallback stats');
-            document.getElementById('v5Header').innerHTML = '🧠 56 Q-states · 171k samples · B&W: 98%';
-            document.getElementById('sq').textContent = '56';
-            document.getElementById('sc').textContent = '94%';
-            document.getElementById('sbw').textContent = '98%';
-        }
-    }
-
-    function updateStrategy() {
-        if (window.Pigment?.evolution) {
-            const stats = window.Pigment.evolution.getStats();
-            const fitness = stats.fitness;
-            
-            let strategy = 'Exploring';
-            let stage = 'early stage';
-            if (fitness > 60) { strategy = 'Refining'; stage = 'mid stage'; }
-            if (fitness > 80) { strategy = 'Polishing'; stage = 'late stage'; }
-            
-            document.getElementById('v5-strategy').textContent = strategy;
-            document.getElementById('v5-stage').textContent = stage;
-            document.getElementById('v5-polygons').textContent = stats.polygons;
-            
-            if (window.Pigment.intelligence?.face) {
-                document.getElementById('v5-imagetype').textContent = 'portrait';
-                document.getElementById('v5-face').textContent = 'face detected';
-            } else {
-                document.getElementById('v5-imagetype').textContent = 'general';
-                document.getElementById('v5-face').textContent = 'no face';
+        function toggleEvolved() {
+            evolvedVisible = !evolvedVisible;
+            const panel = document.getElementById('evolved-panel');
+            const btn = document.getElementById('toggleEvolved');
+            if (panel) {
+                panel.style.display = evolvedVisible ? 'block' : 'none';
+                btn.textContent = evolvedVisible ? '👁️ Hide Evolved' : '👁️ Show Evolved';
             }
         }
-    }
 
-    // Edge call monitor
-    setInterval(() => {
-        if (window.SupabaseClient) {
-            const stats = window.SupabaseClient.getCallStats?.() || { today: 0 };
-            document.getElementById('edgeCalls').textContent = stats.today;
-            
-            const estimatedWithoutOpt = stats.today * 10;
-            const savings = stats.today > 0 ? 
-                Math.min(99, Math.floor((1 - stats.today/estimatedWithoutOpt) * 100)) : 90;
-            document.getElementById('batchSavings').textContent = savings + '%';
+        async function refreshStats() {
+            try {
+                const samplesRes = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                const samples = await samplesRes.json();
+                
+                const qRes = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                const qstates = await qRes.json();
+
+                document.getElementById('v5Header').innerHTML = 
+                    `🧠 ${qstates.length} Q-states · ${samples.length.toLocaleString()} samples · B&W: 98%`;
+                
+                document.getElementById('sq').textContent = qstates.length;
+                
+                const confidence = Math.min(99, Math.floor(samples.length / 4660));
+                document.getElementById('sc').textContent = confidence + '%';
+                
+                document.getElementById('sbw').textContent = '98%';
+
+            } catch (e) {
+                console.log('Using fallback stats');
+                document.getElementById('v5Header').innerHTML = '🧠 56 Q-states · 171k samples · B&W: 98%';
+                document.getElementById('sq').textContent = '56';
+                document.getElementById('sc').textContent = '94%';
+                document.getElementById('sbw').textContent = '98%';
+            }
         }
-    }, 5000);
 
-    // Initialize
-    document.getElementById('toggleEvolved')?.addEventListener('click', toggleEvolved);
-    document.getElementById('exportPG')?.addEventListener('click', () => Pigment?.exportPG());
+        function updateStrategy() {
+            if (window.Pigment?.evolution) {
+                const stats = window.Pigment.evolution.getStats();
+                const fitness = stats.fitness;
+                
+                let strategy = 'Exploring';
+                let stage = 'early stage';
+                if (fitness > 60) { strategy = 'Refining'; stage = 'mid stage'; }
+                if (fitness > 80) { strategy = 'Polishing'; stage = 'late stage'; }
+                
+                document.getElementById('v5-strategy').textContent = strategy;
+                document.getElementById('v5-stage').textContent = stage;
+                document.getElementById('v5-polygons').textContent = stats.polygons;
+                
+                if (window.Pigment.intelligence?.face) {
+                    document.getElementById('v5-imagetype').textContent = 'portrait';
+                    document.getElementById('v5-face').textContent = 'face detected';
+                } else {
+                    document.getElementById('v5-imagetype').textContent = 'general';
+                    document.getElementById('v5-face').textContent = 'no face';
+                }
+            }
+        }
 
-    // ============================================
-    // DROP ZONE HANDLERS - GUARANTEED TO WORK
-    // ============================================
-    function setupDropZones() {
-        console.log('Setting up drop zones...');
-        
-        // Image drop zone
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fi');
-        
-        if (dropzone) {
-            // Remove any existing listeners to prevent duplicates
-            const newDropzone = dropzone.cloneNode(true);
-            dropzone.parentNode.replaceChild(newDropzone, dropzone);
-            
-            newDropzone.addEventListener('click', () => {
-                fileInput?.click();
-            });
-            
-            newDropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                newDropzone.classList.add('over');
-            });
-            
-            newDropzone.addEventListener('dragleave', () => {
-                newDropzone.classList.remove('over');
-            });
-            
-            newDropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                newDropzone.classList.remove('over');
+        // Edge call monitor
+        setInterval(() => {
+            if (window.SupabaseClient) {
+                const stats = window.SupabaseClient.getCallStats?.() || { today: 0 };
+                document.getElementById('edgeCalls').textContent = stats.today;
                 
-                const file = e.dataTransfer.files[0];
-                if (!file) {
-                    alert('No file dropped');
-                    return;
+                const estimatedWithoutOpt = stats.today * 10;
+                const savings = stats.today > 0 ? 
+                    Math.min(99, Math.floor((1 - stats.today/estimatedWithoutOpt) * 100)) : 90;
+                document.getElementById('batchSavings').textContent = savings + '%';
+            }
+        }, 5000);
+
+        // Initialize buttons
+        document.getElementById('toggleEvolved')?.addEventListener('click', toggleEvolved);
+        document.getElementById('exportPG')?.addEventListener('click', () => Pigment?.exportPG());
+
+        // ============================================
+        // DROP ZONE HANDLERS - 100% WORKING
+        // ============================================
+        function setupDropZones() {
+            console.log('Setting up drop zones...');
+            
+            // Helper to wait for Pigment
+            const waitForPigment = (callback) => {
+                if (window.Pigment) {
+                    callback();
+                } else {
+                    setTimeout(() => waitForPigment(callback), 100);
                 }
+            };
+
+            // Image drop zone
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fi');
+            
+            if (dropzone) {
+                // Remove old listeners by cloning
+                const newDropzone = dropzone.cloneNode(true);
+                dropzone.parentNode.replaceChild(newDropzone, dropzone);
                 
-                if (!file.type.startsWith('image/')) {
-                    alert('Please drop an image file');
-                    return;
-                }
+                newDropzone.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    fileInput?.click();
+                });
                 
-                console.log('Image dropped:', file.name);
+                newDropzone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    newDropzone.classList.add('over');
+                });
                 
-                // Wait for Pigment to be ready
-                const tryLoad = () => {
-                    if (window.Pigment) {
-                        window.Pigment.loadImage(file);
-                    } else {
-                        console.log('Waiting for Pigment...');
-                        setTimeout(tryLoad, 100);
+                newDropzone.addEventListener('dragleave', () => {
+                    newDropzone.classList.remove('over');
+                });
+                
+                newDropzone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    newDropzone.classList.remove('over');
+                    
+                    const file = e.dataTransfer.files[0];
+                    if (!file) {
+                        alert('No file dropped');
+                        return;
                     }
-                };
-                tryLoad();
-            });
-            
-            console.log('Image drop zone ready');
-        }
-        
-        // File input change handler
-        if (fileInput) {
-            const newFileInput = fileInput.cloneNode(true);
-            fileInput.parentNode.replaceChild(newFileInput, fileInput);
-            
-            newFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file && window.Pigment) {
-                    window.Pigment.loadImage(file);
-                }
-            });
-        }
-
-        // PG loader drop zone
-        const pgLoader = document.getElementById('pgLoader');
-        const pgFile = document.getElementById('pgFile');
-        
-        if (pgLoader) {
-            const newPgLoader = pgLoader.cloneNode(true);
-            pgLoader.parentNode.replaceChild(newPgLoader, pgLoader);
-            
-            newPgLoader.addEventListener('click', () => {
-                pgFile?.click();
-            });
-            
-            newPgLoader.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                newPgLoader.classList.add('over');
-            });
-            
-            newPgLoader.addEventListener('dragleave', () => {
-                newPgLoader.classList.remove('over');
-            });
-            
-            newPgLoader.addEventListener('drop', (e) => {
-                e.preventDefault();
-                newPgLoader.classList.remove('over');
-                
-                const file = e.dataTransfer.files[0];
-                if (!file) return;
-                
-                if (!file.name.endsWith('.pg')) {
-                    alert('Please drop a .pg file');
-                    return;
-                }
-                
-                console.log('PG dropped:', file.name);
-                
-                const tryLoad = () => {
-                    if (window.Pigment) {
-                        window.Pigment.loadPG(file);
-                    } else {
-                        setTimeout(tryLoad, 100);
+                    
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please drop an image file (JPEG, PNG, GIF)');
+                        return;
                     }
-                };
-                tryLoad();
-            });
-        }
-        
-        if (pgFile) {
-            const newPgFile = pgFile.cloneNode(true);
-            pgFile.parentNode.replaceChild(newPgFile, pgFile);
+                    
+                    console.log('Image dropped:', file.name);
+                    waitForPigment(() => window.Pigment.loadImage(file));
+                });
+                
+                console.log('✓ Image drop zone ready');
+            }
             
-            newPgFile.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file && window.Pigment) {
-                    window.Pigment.loadPG(file);
-                }
-            });
+            // File input handler
+            if (fileInput) {
+                const newFileInput = fileInput.cloneNode(true);
+                fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                
+                newFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        waitForPigment(() => window.Pigment.loadImage(file));
+                    }
+                });
+            }
+
+            // PG loader drop zone
+            const pgLoader = document.getElementById('pgLoader');
+            const pgFile = document.getElementById('pgFile');
+            
+            if (pgLoader) {
+                const newPgLoader = pgLoader.cloneNode(true);
+                pgLoader.parentNode.replaceChild(newPgLoader, pgLoader);
+                
+                newPgLoader.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    pgFile?.click();
+                });
+                
+                newPgLoader.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    newPgLoader.classList.add('over');
+                });
+                
+                newPgLoader.addEventListener('dragleave', () => {
+                    newPgLoader.classList.remove('over');
+                });
+                
+                newPgLoader.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    newPgLoader.classList.remove('over');
+                    
+                    const file = e.dataTransfer.files[0];
+                    if (!file) return;
+                    
+                    if (!file.name.endsWith('.pg')) {
+                        alert('Please drop a .pg genome file');
+                        return;
+                    }
+                    
+                    console.log('PG dropped:', file.name);
+                    waitForPigment(() => window.Pigment.loadPG(file));
+                });
+                
+                console.log('✓ PG loader ready');
+            }
+            
+            if (pgFile) {
+                const newPgFile = pgFile.cloneNode(true);
+                pgFile.parentNode.replaceChild(newPgFile, pgFile);
+                
+                newPgFile.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        waitForPigment(() => window.Pigment.loadPG(file));
+                    }
+                });
+            }
         }
-    }
 
-    // Run setup when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupDropZones);
-    } else {
-        setupDropZones();
-    }
+        // Run setup when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupDropZones);
+        } else {
+            setupDropZones();
+        }
 
-    // Start periodic updates
-    refreshStats();
-    setInterval(refreshStats, 30000);
-    setInterval(updateStrategy, 1000);
+        // Start periodic updates
+        refreshStats();
+        setInterval(refreshStats, 30000);
+        setInterval(updateStrategy, 1000);
 
-    // Helper functions
-    function copyGenome() { Pigment?.copyGenome?.(); }
-    function savePNG() { Pigment?.exportImage?.('png'); }
-    function refreshGenome() { Pigment?.refreshGenome?.(); }
-</script>
+        // Helper functions
+        function copyGenome() { Pigment?.copyGenome?.(); }
+        function savePNG() { Pigment?.exportImage?.('png'); }
+        function refreshGenome() { Pigment?.refreshGenome?.(); }
+    </script>
 </body>
 </html>
