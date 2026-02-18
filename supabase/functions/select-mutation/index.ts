@@ -6,19 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Q-learning constants
 const LEARNING_RATE = 0.1
 const DISCOUNT_FACTOR = 0.95
 const EXPLORATION_RATE = 0.2
 const ACTIONS = ['translate', 'scale', 'rotate', 'color', 'opacity', 'intelligent']
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
   
-  // Initialize Supabase client
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -27,7 +24,6 @@ serve(async (req) => {
   try {
     const { state, lastAction, reward, nextState, mode } = await req.json()
     
-    // Mode: select best action
     if (mode === 'select') {
       const stateKey = JSON.stringify(state)
       const { data: qtRow } = await supabase
@@ -36,7 +32,6 @@ serve(async (req) => {
         .eq('state_key', stateKey)
         .single()
       
-      // Exploration vs exploitation
       if (Math.random() < EXPLORATION_RATE || !qtRow) {
         const action = ACTIONS[Math.floor(Math.random() * ACTIONS.length)]
         return new Response(JSON.stringify({ 
@@ -47,7 +42,6 @@ serve(async (req) => {
         })
       }
       
-      // Pick best action from Q-table
       const qValues = qtRow.action_values as Record<string, number>
       const action = Object.entries(qValues)
         .sort(([,a], [,b]) => b - a)[0]?.[0] || ACTIONS[0]
@@ -61,7 +55,6 @@ serve(async (req) => {
       })
     }
     
-    // Mode: update Q-table with new experience
     if (mode === 'update') {
       const stateKey = JSON.stringify(state)
       const nextKey = JSON.stringify(nextState)
