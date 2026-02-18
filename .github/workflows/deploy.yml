@@ -1,0 +1,45 @@
+name: Deploy PIGMENT
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install Supabase CLI
+      run: npm install -g supabase
+    
+    - name: Link Supabase project
+      run: supabase link --project-ref slfxwkvhomomdcqpkfqp
+      env:
+        SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    
+    - name: Deploy Edge Functions
+      run: |
+        supabase functions deploy generate-embedding --no-verify-jwt
+        supabase functions deploy select-mutation --no-verify-jwt
+        supabase functions deploy learn-from-evolution --no-verify-jwt
+        supabase functions deploy semantic-search --no-verify-jwt
+        supabase functions deploy aesthetic-predictor --no-verify-jwt
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
