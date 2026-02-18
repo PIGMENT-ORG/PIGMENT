@@ -111,6 +111,11 @@
             color: #d8f0c0;
         }
 
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
         .queue-section {
             width: 100%;
             max-width: 1000px;
@@ -208,7 +213,7 @@
         }
 
         .queue-status {
-            width: 80px;
+            width: 100px;
             text-align: center;
             padding: 4px 8px;
             border-radius: 4px;
@@ -407,9 +412,12 @@
             }
 
             clearQueue() {
+                if (this.isProcessing) {
+                    if (!confirm('Stop processing and clear queue?')) return;
+                    this.stopProcessing();
+                }
                 this.items = [];
                 this.currentIndex = -1;
-                this.isProcessing = false;
                 this.renderQueue();
                 document.getElementById('queueCount').textContent = '0 images';
             }
@@ -418,7 +426,7 @@
                 const list = document.getElementById('queueList');
                 list.innerHTML = '';
 
-                this.items.forEach((item, index) => {
+                this.items.forEach((item) => {
                     const div = document.createElement('div');
                     div.className = 'queue-item';
 
@@ -429,7 +437,7 @@
 
                     div.innerHTML = `
                         <div class="queue-status ${statusClass}">${item.status}</div>
-                        <div style="flex:1; font-size:0.9em;">${item.name}</div>
+                        <div style="flex:1; font-size:0.9em; word-break:break-all;">${item.name}</div>
                         <div style="width:100px; text-align:right;">
                             ${item.status === 'processing' ? `${item.fitness.toFixed(1)}%` : ''}
                             ${item.status === 'completed' ? '✓' : ''}
@@ -447,13 +455,40 @@
             }
 
             async startProcessing() {
-                if (this.items.length === 0 || this.isProcessing) return;
+                if (this.items.length === 0) {
+                    alert('Add images to queue first');
+                    return;
+                }
+                
+                if (this.isProcessing) return;
 
                 this.isProcessing = true;
+                this.isPaused = false;
                 this.currentIndex = 0;
 
-                while (this.currentIndex < this.items.length && this.isProcessing && !this.isPaused) {
+                // Update button states
+                document.getElementById('startBatchBtn').disabled = true;
+                document.getElementById('pauseBatchBtn').disabled = false;
+                document.getElementById('stopBatchBtn').disabled = false;
+                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
+
+                // Process each item
+                while (this.currentIndex < this.items.length && this.isProcessing) {
+                    // Wait if paused
+                    while (this.isPaused && this.isProcessing) {
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                    
+                    if (!this.isProcessing) break;
+
                     const item = this.items[this.currentIndex];
+                    
+                    // Skip already completed items
+                    if (item.status === 'completed') {
+                        this.currentIndex++;
+                        continue;
+                    }
+
                     item.status = 'processing';
                     this.renderQueue();
 
@@ -471,19 +506,28 @@
                 }
 
                 this.isProcessing = false;
+                
+                // Reset button states
+                document.getElementById('startBatchBtn').disabled = false;
+                document.getElementById('pauseBatchBtn').disabled = true;
+                document.getElementById('stopBatchBtn').disabled = true;
+                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
             }
 
             async processRealEvolution(item) {
-                // This is where the REAL evolution would happen
-                // For now, simulate with progress updates
-                const generations = 500; // Real generations per image
+                // Simulate evolution with progress
+                const generations = 500;
                 const steps = 20;
 
                 for (let i = 0; i <= steps; i++) {
-                    if (this.isPaused) {
-                        while (this.isPaused && this.isProcessing) {
-                            await new Promise(r => setTimeout(r, 100));
-                        }
+                    // Check if stopped
+                    if (!this.isProcessing) {
+                        throw new Error('Processing stopped');
+                    }
+
+                    // Check if paused
+                    while (this.isPaused && this.isProcessing) {
+                        await new Promise(r => setTimeout(r, 100));
                     }
 
                     item.progress = (i / steps) * 100;
@@ -491,9 +535,11 @@
                     item.generations = Math.floor((i / steps) * generations);
 
                     this.renderQueue();
-                    await new Promise(r => setTimeout(r, 50)); // Simulate work
+                    
+                    // Simulate work (shorter for testing - change to 200 for real)
+                    await new Promise(r => setTimeout(r, 50));
 
-                    // Every few steps, write to Supabase
+                    // Write to Supabase at milestones
                     if (i % 5 === 0 && i > 0) {
                         await this.writeToSupabase(item, i === steps);
                     }
@@ -503,14 +549,14 @@
             async writeToSupabase(item, isComplete) {
                 try {
                     // Write training data
-                    await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
                         method: 'POST',
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            operator_used: 'batch',
+                            operator_used: 'batch_training',
                             mutation_success: true,
                             parent_fitness: 0,
                             offspring_fitness: item.fitness,
@@ -518,30 +564,14 @@
                             metadata: {
                                 image: item.name,
                                 generations: item.generations,
-                                completed: isComplete
+                                completed: isComplete,
+                                timestamp: new Date().toISOString()
                             }
                         })
                     });
 
-                    // Update Q-table (simplified)
-                    if (isComplete) {
-                        const stateKey = JSON.stringify({
-                            fitness: Math.floor(item.fitness / 10) * 10,
-                            stage: item.fitness < 60 ? 'mid' : 'late'
-                        });
-
-                        await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table`, {
-                            method: 'POST',
-                            headers: {
-                                'apikey': SUPABASE_ANON_KEY,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                state_key: stateKey,
-                                action_values: { scale: 0.63, opacity: 0.56, color: 0.53 },
-                                update_count: 1
-                            })
-                        });
+                    if (!response.ok) {
+                        console.error('Failed to write to Supabase:', await response.text());
                     }
 
                 } catch (e) {
@@ -551,36 +581,63 @@
 
             pauseProcessing() {
                 this.isPaused = true;
+                document.getElementById('pauseBatchBtn').innerHTML = '<span>▶</span> RESUME';
             }
 
             resumeProcessing() {
                 this.isPaused = false;
+                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
             }
 
             stopProcessing() {
                 this.isProcessing = false;
                 this.isPaused = false;
                 this.currentIndex = -1;
+                
+                // Reset any processing items to pending
                 this.items.forEach(item => {
-                    if (item.status === 'processing') item.status = 'pending';
+                    if (item.status === 'processing') {
+                        item.status = 'pending';
+                    }
                 });
+                
                 this.renderQueue();
+                
+                // Reset button states
+                document.getElementById('startBatchBtn').disabled = false;
+                document.getElementById('pauseBatchBtn').disabled = true;
+                document.getElementById('stopBatchBtn').disabled = true;
+                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
             }
         }
 
-        // Initialize
-        const queue = new RealTrainingQueue();
-
-        // Event Listeners
+        // ============================================
+        // Initialize Everything AFTER DOM is loaded
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing...');
+            
+            // Create queue instance
+            const queue = new RealTrainingQueue();
+
             // Load real stats immediately
             queue.refreshStats();
-            setInterval(() => queue.refreshStats(), 30000); // Refresh every 30s
+            
+            // Refresh stats every 30 seconds
+            setInterval(() => queue.refreshStats(), 30000);
 
-            // Drop zone
+            // Get DOM elements
             const dropzone = document.getElementById('dropzone');
             const fileInput = document.getElementById('fileInput');
+            const addImagesBtn = document.getElementById('addImagesBtn');
+            const startBatchBtn = document.getElementById('startBatchBtn');
+            const pauseBatchBtn = document.getElementById('pauseBatchBtn');
+            const stopBatchBtn = document.getElementById('stopBatchBtn');
+            const refreshStatsBtn = document.getElementById('refreshStatsBtn');
+            const dashboardBtn = document.getElementById('dashboardBtn');
+            const clearQueueBtn = document.getElementById('clearQueueBtn');
 
+            // Drop zone handlers
             dropzone.addEventListener('click', () => fileInput.click());
             
             dropzone.addEventListener('dragover', (e) => {
@@ -600,53 +657,50 @@
                 }
             });
 
+            // File input handler
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     queue.addItems(e.target.files);
                 }
             });
 
-            // Buttons
-            document.getElementById('addImagesBtn').addEventListener('click', () => {
+            // Button handlers
+            addImagesBtn.addEventListener('click', () => {
                 fileInput.click();
             });
 
-            document.getElementById('startBatchBtn').addEventListener('click', () => {
+            startBatchBtn.addEventListener('click', () => {
                 queue.startProcessing();
-                document.getElementById('startBatchBtn').disabled = true;
-                document.getElementById('pauseBatchBtn').disabled = false;
-                document.getElementById('stopBatchBtn').disabled = false;
             });
 
-            document.getElementById('pauseBatchBtn').addEventListener('click', () => {
+            pauseBatchBtn.addEventListener('click', () => {
                 if (queue.isPaused) {
                     queue.resumeProcessing();
-                    document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
                 } else {
                     queue.pauseProcessing();
-                    document.getElementById('pauseBatchBtn').innerHTML = '<span>▶</span> RESUME';
                 }
             });
 
-            document.getElementById('stopBatchBtn').addEventListener('click', () => {
-                queue.stopProcessing();
-                document.getElementById('startBatchBtn').disabled = false;
-                document.getElementById('pauseBatchBtn').disabled = true;
-                document.getElementById('stopBatchBtn').disabled = true;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
+            stopBatchBtn.addEventListener('click', () => {
+                if (confirm('Stop batch processing?')) {
+                    queue.stopProcessing();
+                }
             });
 
-            document.getElementById('clearQueueBtn').addEventListener('click', () => {
-                queue.clearQueue();
-            });
-
-            document.getElementById('refreshStatsBtn').addEventListener('click', () => {
+            refreshStatsBtn.addEventListener('click', () => {
                 queue.refreshStats();
             });
 
-            document.getElementById('dashboardBtn').addEventListener('click', () => {
+            dashboardBtn.addEventListener('click', () => {
                 window.location.href = 'dashboard.html';
             });
+
+            clearQueueBtn.addEventListener('click', () => {
+                queue.clearQueue();
+            });
+
+            // Expose queue globally for debugging
+            window.queue = queue;
         });
     </script>
 </body>
