@@ -13,6 +13,7 @@ Just open `index.html` in a modern browser. No build step required.
 3. Watch polygons evolve to match your image!
 
 **Live Demo:** [https://pigment-org.github.io/PIGMENT](https://pigment-org.github.io/PIGMENT)
+**Learning Dashboard:** [https://pigment-org.github.io/PIGMENT/dashboard.html](https://pigment-org.github.io/PIGMENT/dashboard.html)
 
 ---
 
@@ -21,14 +22,15 @@ Just open `index.html` in a modern browser. No build step required.
 ```
 
 PIGMENT/
-├── index.html                    # Main application (open this!)
+├── index.html                    # Main application
+├── dashboard.html                # ML Learning Dashboard
 ├── css/
 │   └── style.css                 # All styles
 ├── js/
 │   ├── core/
 │   │   ├── pigment.js            # Master controller
 │   │   ├── canvas-manager.js     # Canvas rendering
-│   │   └── evolution-engine.js   # Core GA loop
+│   │   └── evolution-engine.js   # Core GA loop with RL
 │   ├── intelligence/
 │   │   ├── visual-intelligence.js # Master intelligence
 │   │   ├── face-detector.js      # Face detection
@@ -83,7 +85,7 @@ PIGMENT/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml             # GitHub Actions deploy
-└── tests/                          # Test files (future)
+└── tests/                          # Test files
 
 ```
 
@@ -123,7 +125,7 @@ PIGMENT/
 
 ## 🗄️ Supabase ML Backend (Live)
 
-This project uses Supabase for cross-session machine learning. The backend is already configured and live:
+This project uses Supabase for cross-session machine learning. The backend is live with **2,286+ training samples** already collected:
 
 - **Project URL:** `https://slfxwkvhomomdcqpkfqp.supabase.co`
 - **Anon Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY`
@@ -135,7 +137,7 @@ The Supabase backend includes:
 ```sql
 - evolution_runs     # Metadata for each evolution session
 - image_embeddings   # 384-dim vector embeddings with pgvector
-- training_data      # RL training examples
+- training_data      # RL training examples (2,286+ records)
 - rl_q_table         # Q-learning state-action values
 - user_feedback      # Aesthetic ratings from users
 - model_checkpoints  # ML model versioning
@@ -161,6 +163,34 @@ The ML backend enables:
 · Aesthetic predictor — Learn from user ratings (5-star system)
 · Cross-session memory — Improvements persist between sessions
 · Style clustering — Automatically group images by visual style
+
+Current Learning Stats (Live)
+
+Based on 2,286 training samples, the AI has discovered:
+
+Mutation Success Rate Verdict
+scale 63.0% ⭐ BEST - Use most often
+opacity 56.4% ⭐ Great for fine-tuning
+color 53.1% ⭐ Good for mid/late stages
+rotate 37.7% 🟡 Moderate effectiveness
+translate 24.7% 🔴 Least effective
+intelligent 0.0% 🟣 Still learning
+
+---
+
+📊 Learning Dashboard
+
+Monitor your AI's learning in real-time:
+
+https://pigment-org.github.io/PIGMENT/dashboard.html
+
+The dashboard shows:
+
+· 📈 Training samples collected
+· 🎯 Mutation success rates
+· 🔮 Q-learning progress
+· ⚡ Stage-based strategies
+· 🤖 Real-time AI insights
 
 ---
 
@@ -213,7 +243,7 @@ This project is configured for GitHub Pages deployment:
 1. Fork this repository
 2. Go to Settings → Pages
 3. Select main branch as source
-4. Your site will be live at https://[username].github.io/pigment
+4. Your site will be live at https://[username].github.io/PIGMENT
 
 GitHub Actions
 
@@ -257,24 +287,20 @@ SUPABASE_SERVICE_ROLE_KEY=[get from Supabase dashboard]
 
 ```pg
 -- PIGMENT Genome
--- Generated: 2/18/2026, 1:47:36 AM
--- Generations: 46300
--- Fitness: 99.05%
+-- Generated: [date]
+-- Generations: 50000
+-- Fitness: 92.50%
 -- Polygons: 50
 
 canvas {
-  width: 198
-  height: 300
+  width: 200
+  height: 200
 }
 
 polygons {
   poly-0 {
-    points: 212.0,60.9 210.8,358.8 -38.9,231.9
-    color: rgba(0,0,53.75,0.67)
-  }
-  poly-1 {
-    points: 233.1,134.2 8.2,358.2 -38.5,45.9
-    color: rgba(61.99,38.32,132.23,0.55)
+    points: 45.2,78.1 120.5,34.8 89.3,145.2
+    color: rgba(210,145,100,0.75)
   }
   ...
 }
@@ -299,7 +325,7 @@ Image Size Generations to 99% Time
 200×200 ~50,000 5-8 minutes
 300×300 ~100,000 15-20 minutes
 
-With ML enabled, convergence is 2-3× faster after 1000+ evolutions.
+With ML enabled, convergence is 2-3× faster after 1000+ evolutions. Current training data: 2,286 samples
 
 ---
 
@@ -337,5 +363,8 @@ MIT License — Use freely for any purpose!
 · All contributors and testers
 
 ---
+
+⭐ Live Demo: https://pigment-org.github.io/PIGMENT
+📊 Learning Dashboard: https://pigment-org.github.io/PIGMENT/dashboard.html
 
 Built with ❤️ using vanilla JavaScript, Canvas 2D API, and evolutionary computation.
