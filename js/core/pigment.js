@@ -10,11 +10,14 @@ const Pigment = {
         UIControls.init();
         FitnessCurve.init('crv');
         
+        // Supabase configuration
+        const SUPABASE_CONFIG = {
+            url: process?.env?.SUPABASE_URL || 'https://slfxwkvhomomdcqpkfqp.supabase.co',
+            anonKey: process?.env?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY'
+        };
+        
         // Initialize Supabase with your credentials
-        this.supabase=SupabaseClient.init({
-            url: 'https://slfxwkvhomomdcqpkfqp.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY'
-        });
+        this.supabase = SupabaseClient.init(SUPABASE_CONFIG);
         
         this.setupPasteListener();
         AlertSystem.info('✨ PIGMENT ready — Drop an image to start!');
