@@ -10,7 +10,7 @@ const SupabaseClient = {
         this.url = config.url
         this.anonKey = config.anonKey
         this.enabled = !!(this.url && this.anonKey)
-        this.sessionId = crypto.randomUUID()
+        this.sessionId = crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now()
         
         if (this.enabled) {
             console.log('✅ Supabase ML backend enabled')
@@ -172,16 +172,26 @@ const SupabaseClient = {
         if (!this.enabled) return
         
         try {
-            const supabase = createClient(this.url, this.anonKey)
-            await supabase.from('user_feedback').insert({
-                evolution_run_id: evolutionRunId,
-                image_embedding_id: imageEmbeddingId,
-                user_rating: rating,
-                user_comments: comments,
-                created_at: new Date().toISOString()
+            // Using fetch directly since we don't have supabase-js client
+            const response = await fetch(`${this.url}/rest/v1/user_feedback`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.anonKey}`,
+                    'apikey': this.anonKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    evolution_run_id: evolutionRunId,
+                    image_embedding_id: imageEmbeddingId,
+                    user_rating: rating,
+                    user_comments: comments,
+                    created_at: new Date().toISOString()
+                })
             })
+            return response.ok
         } catch (err) {
             console.error('Feedback submission failed:', err)
+            return false
         }
     }
 }
