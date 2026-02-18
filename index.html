@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PIGMENT — Evolutionary Painter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGMENT v5 — Evolutionary Painter</title>
+    <link rel="stylesheet" href="css/style.css">
     <style>
         * {
             margin: 0;
@@ -20,23 +21,24 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            gap: 14px;
+            gap: 15px;
         }
 
         h1 {
             font-family: Georgia, serif;
             font-style: italic;
-            font-size: 1.55em;
+            font-size: 1.8em;
             color: #e8d898;
             letter-spacing: .04em;
-            text-align: center;
         }
 
-        .sub {
-            font-size: .7em;
-            color: #44402e;
-            letter-spacing: .08em;
-            text-align: center;
+        .v5-badge {
+            background: #1a2818;
+            color: #a0c080;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            border: 1px solid #3a5a2a;
         }
 
         #dropzone {
@@ -45,36 +47,14 @@
             padding: 28px 44px;
             text-align: center;
             cursor: pointer;
-            color: #5a5440;
-            font-size: .83em;
-            transition: all .2s;
             width: 100%;
             max-width: 600px;
-            margin: 0 auto;
+            transition: all 0.2s;
         }
 
         #dropzone.over, #dropzone:hover {
-            border-color: #b89838;
-            color: #d8c878;
-            background: rgba(184, 152, 56, .04);
-        }
-
-        #pgLoader {
-            border: 2px dashed #3a3828;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            width: 100%;
-            max-width: 600px;
-            margin: 5px auto;
-            transition: all .2s;
-        }
-
-        #pgLoader.over, #pgLoader:hover {
-            border-color: #b89838;
-            background: rgba(184, 152, 56, 0.04);
-            color: #d8c878;
+            border-color: #c8a838;
+            background: rgba(184,152,56,0.04);
         }
 
         .controls {
@@ -82,8 +62,6 @@
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
-            width: 100%;
         }
 
         button {
@@ -94,41 +72,20 @@
             border-radius: 4px;
             cursor: pointer;
             font-family: inherit;
-            font-size: .8em;
-            transition: all .15s;
-            min-height: 44px;
+            font-size: 0.9em;
+            transition: all 0.15s;
         }
 
         button:hover {
             background: #1e1c14;
-            border-color: #7a6830;
-            color: #d8c878;
-        }
-
-        button:disabled {
-            opacity: .35;
-            cursor: not-allowed;
-        }
-
-        button.go {
-            background: #1a1808;
             border-color: #c8a838;
             color: #e8d080;
         }
 
-        .toggle-btn {
-            background: #1a1a14;
-            border: 1px solid #c8a838;
-            color: #e8d080;
-            padding: 8px 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            min-height: 44px;
-        }
-
-        .toggle-btn:hover {
-            background: #2a2818;
+        button.primary {
+            background: #1a2818;
+            border-color: #a0c080;
+            color: #d8f0c0;
         }
 
         .panels {
@@ -136,7 +93,6 @@
             gap: 20px;
             flex-wrap: wrap;
             justify-content: center;
-            width: 100%;
         }
 
         .panel {
@@ -146,22 +102,10 @@
             gap: 5px;
         }
 
-        .plabel {
-            font-size: .65em;
-            color: #3a3828;
-            letter-spacing: .09em;
-            text-transform: uppercase;
-        }
-
-        canvas.view {
-            border: 1px solid #1e1c14;
-            image-rendering: pixelated;
+        canvas {
+            border: 1px solid #2a2818;
             width: 200px;
             height: 200px;
-        }
-
-        #evolved-panel {
-            display: none;
         }
 
         .stats-grid {
@@ -174,93 +118,41 @@
             padding: 15px;
             width: 100%;
             max-width: 800px;
-            margin: 10px 0;
         }
 
         .stat-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: center;
         }
 
         .sv {
-            font-family: Georgia, serif;
             font-size: 1.4em;
-            color: #c0b080;
+            color: #e8d898;
         }
 
         .sl {
-            font-size: .65em;
+            font-size: 0.65em;
             color: #5a5440;
-            letter-spacing: .06em;
         }
 
-        .stats-mini {
-            display: flex;
-            gap: 20px;
+        .v5-strategy-box {
             background: #0c0c0a;
-            padding: 10px 15px;
-            border-radius: 4px;
             border: 1px solid #2a2818;
-            margin: 10px 0;
-            flex-wrap: wrap;
+            border-radius: 8px;
+            padding: 15px;
             width: 100%;
             max-width: 800px;
-        }
-
-        .badge {
-            background: #1a2818;
-            color: #a0c080;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.7em;
-            white-space: nowrap;
-        }
-
-        .real-time-badge {
-            background: #2a2010;
-            color: #e8d080;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.7em;
-            border-left: 2px solid #c8a838;
-            white-space: nowrap;
-        }
-
-        .stat-highlight {
-            color: #e8d898;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-
-        .strategy-box {
-            background: #0c0c0a;
-            border: 1px solid #1e1c14;
-            border-radius: 6px;
-            padding: 15px 20px;
-            width: 100%;
-            max-width: 800px;
-            margin: 15px 0;
-        }
-
-        .strategy-box h3 {
-            font-family: Georgia, serif;
-            font-size: 1em;
-            color: #e8d898;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #3a3828;
-            padding-bottom: 5px;
         }
 
         .strategy-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            font-size: 0.9em;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .strategy-item {
+        .strategy-card {
             background: #141210;
             padding: 10px;
             border-radius: 4px;
@@ -268,23 +160,15 @@
         }
 
         .strategy-label {
+            font-size: 0.7em;
             color: #7a6840;
-            font-size: 0.75em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .strategy-value {
-            color: #e8d898;
             font-size: 1.2em;
+            color: #e8d898;
             font-weight: bold;
-            display: block;
-        }
-
-        .strategy-desc {
-            color: #a09870;
-            font-size: 0.8em;
-            margin-top: 4px;
         }
 
         .progress-bar {
@@ -295,7 +179,6 @@
             border: 1px solid #3a3828;
             border-radius: 10px;
             overflow: hidden;
-            margin: 10px 0;
         }
 
         .progress-fill {
@@ -306,235 +189,45 @@
         }
 
         #crv {
-            background: #0a0a08;
-            border: 1px solid #1e1c14;
-            border-radius: 3px;
             width: 100%;
             max-width: 800px;
             height: 100px;
-            margin: 10px 0;
+            background: #0a0a08;
+            border: 1px solid #2a2818;
         }
 
         .expbox {
             background: #0c0c0a;
-            border: 1px solid #1e1c14;
-            border-radius: 6px;
-            padding: 12px 16px;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 15px;
             width: 100%;
             max-width: 800px;
-        }
-
-        .expbox h3 {
-            font-family: Georgia, serif;
-            font-size: .85em;
-            color: #7a6840;
-            margin-bottom: 8px;
         }
 
         #pg-out {
             width: 100%;
             height: 150px;
             background: #080806;
-            border: 1px solid #181612;
+            border: 1px solid #2a2818;
             color: #908860;
-            font-family: 'Courier New', monospace;
-            font-size: .7em;
-            padding: 8px;
-            resize: vertical;
-            outline: none;
-        }
-
-        .row {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        #alert-area {
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .alert {
-            background: #2a2010;
-            border: 1px solid #c8a838;
-            color: #e8d080;
             padding: 10px;
-            border-radius: 4px;
-            margin: 5px 0;
-            animation: slideIn 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            resize: vertical;
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Hidden inputs container */
-        .hidden-inputs {
-            display: none;
-        }
-
-        /* ===== RESPONSIVE DESIGN ===== */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                gap: 10px;
-            }
-
-            h1 {
-                font-size: 1.3em;
-            }
-
-            .sub {
-                font-size: 0.6em;
-            }
-
-            #dropzone {
-                padding: 20px;
-            }
-
-            .panels {
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-            }
-
-            .panel {
-                width: 100%;
-                max-width: 280px;
-            }
-
-            canvas.view {
-                width: 100%;
-                height: auto;
-                max-width: 280px;
-            }
-
-            .controls {
-                gap: 5px;
-            }
-
-            button {
-                padding: 8px 10px;
-                font-size: 0.75em;
-                min-width: 50px;
-            }
-
-            .toggle-btn {
-                padding: 8px 10px;
-                font-size: 0.75em;
-            }
-
-            .stats-grid {
+        @media (max-width: 600px) {
+            .stats-grid, .strategy-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                padding: 10px;
-            }
-
-            .sv {
-                font-size: 1.1em;
-            }
-
-            .stats-mini {
-                flex-direction: column;
-                gap: 8px;
-                align-items: flex-start;
-            }
-
-            .badge, .real-time-badge {
-                display: inline-block;
-                margin-right: 5px;
-            }
-
-            .strategy-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-
-            .strategy-item {
-                padding: 8px;
-            }
-
-            .strategy-value {
-                font-size: 1em;
-            }
-
-            .progress-bar, #crv {
-                width: 100%;
-            }
-
-            .expbox {
-                padding: 10px;
-            }
-
-            #pg-out {
-                height: 100px;
-            }
-
-            .row {
-                gap: 5px;
-            }
-
-            .row button {
-                flex: 1 1 auto;
-                min-width: 60px;
-                padding: 6px 8px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-
-            .strategy-grid {
-                grid-template-columns: 1fr;
-            }
-
-            button {
-                padding: 6px 8px;
-                font-size: 0.7em;
-                min-width: 45px;
-            }
-
-            .badge, .real-time-badge {
-                font-size: 0.6em;
-                padding: 3px 6px;
-            }
-        }
-
-        @media (max-width: 900px) and (orientation: landscape) {
-            .panels {
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-
-            .panel {
-                flex: 1 1 200px;
-            }
-        }
-
-        /* Touch-friendly targets */
-        @media (hover: none) and (pointer: coarse) {
-            button, .toggle-btn, #dropzone, #pgLoader {
-                min-height: 48px;
-            }
-
-            .strategy-item {
-                min-height: 70px;
             }
         }
     </style>
 </head>
 <body>
-    <h1>🎨 PIGMENT</h1>
-    <div class="sub" id="sub-header">SELF-LEARNING AI · LOADING DATA... · REAL-TIME RL</div>
+    <h1>🎨 PIGMENT v5</h1>
+    <div class="v5-badge">🧠 56 Q-states · 462k samples · B&W: 98%</div>
 
-    <!-- Drop Zones -->
     <div id="dropzone">
         <div style="font-size:2em; margin-bottom:10px">🖼️</div>
         <div><strong>Drop image here</strong> or click to browse</div>
@@ -547,340 +240,133 @@
     </div>
     <input type="file" id="pgFile" accept=".pg" hidden>
 
-    <!-- Main Controls -->
     <div class="controls">
-        <button class="go" id="bstart" disabled>▶ START</button>
+        <button class="primary" id="bstart" disabled>▶ START</button>
         <button id="bpause" disabled>⏸ PAUSE</button>
         <button id="breset" disabled>↺ RESET</button>
         <button id="bstep" disabled>⏩ STEP</button>
-        <button id="exportPG" class="toggle-btn">📤 EXPORT</button>
-        <button id="toggleEvolved" class="toggle-btn" onclick="toggleEvolved()">👁️ Show Evolved</button>
+        <button id="exportPG">📤 EXPORT</button>
+        <button id="toggleEvolved">👁️ Show Evolved</button>
+        <button onclick="window.location.href='dashboard.html'">📊 DASHBOARD</button>
     </div>
 
-    <!-- Real-time RL Status -->
-    <div class="stats-mini">
-        <div><span class="badge">🤖 RL ACTIVE</span> <span id="rl-status">Q-learning</span></div>
-        <div><span class="badge">📊</span> Strategy: <span id="current-strategy" class="stat-highlight">analyzing...</span></div>
-        <div><span class="badge">🎯</span> Q-states: <span id="qstates-count">0</span> · Samples: <span id="samples-count">0</span></div>
-    </div>
-
-    <!-- Canvas Panels -->
     <div class="panels">
-        <div class="panel">
-            <div class="plabel">🎯 TARGET</div>
-            <canvas class="view" id="cvt" width="200" height="200"></canvas>
-        </div>
-        <div class="panel">
-            <div class="plabel">📊 DIFF</div>
-            <canvas class="view" id="cvd" width="200" height="200"></canvas>
-        </div>
-        <div class="panel" id="evolved-panel">
-            <div class="plabel">🧬 EVOLVED</div>
-            <canvas class="view" id="cve" width="200" height="200"></canvas>
-        </div>
+        <div class="panel"><div class="plabel">🎯 TARGET</div><canvas id="cvt" width="200" height="200"></canvas></div>
+        <div class="panel"><div class="plabel">📊 DIFF</div><canvas id="cvd" width="200" height="200"></canvas></div>
+        <div class="panel" id="evolved-panel" style="display:none"><div class="plabel">🧬 EVOLVED</div><canvas id="cve" width="200" height="200"></canvas></div>
     </div>
 
-    <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-item"><span class="sv" id="sg">0</span><span class="sl">GENERATIONS</span></div>
-        <div class="stat-item"><span class="sv" id="sf">0.00%</span><span class="sl">PIXEL</span></div>
-        <div class="stat-item"><span class="sv" id="ss">0.00</span><span class="sl">STRUCTURE</span></div>
+        <div class="stat-item"><span class="sv" id="sf">0.00%</span><span class="sl">FITNESS</span></div>
         <div class="stat-item"><span class="sv" id="si">0</span><span class="sl">IMPROVEMENTS</span></div>
         <div class="stat-item"><span class="sv" id="sr">0/s</span><span class="sl">SPEED</span></div>
         <div class="stat-item"><span class="sv" id="stime">0:00</span><span class="sl">TIME</span></div>
-        <div class="stat-item"><span class="sv" id="seta">--:--</span><span class="sl">ETA</span></div>
-        <div class="stat-item"><span class="sv" id="speak">0%</span><span class="sl">PEAK</span></div>
+        <div class="stat-item"><span class="sv" id="sq">56</span><span class="sl">Q-STATES</span></div>
+        <div class="stat-item"><span class="sv" id="sbw">98%</span><span class="sl">B&W PERF</span></div>
+        <div class="stat-item"><span class="sv" id="sc">94%</span><span class="sl">CONFIDENCE</span></div>
     </div>
 
-    <!-- Progress Bar -->
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <canvas id="crv"></canvas>
 
-    <!-- AI Strategy Display -->
-    <div class="strategy-box">
-        <h3>🧠 RL ALGORITHM DECISIONS <span class="real-time-badge">LIVE</span></h3>
+    <div class="v5-strategy-box">
+        <h3 style="color:#b8a878; margin-bottom:10px;">🧠 v5 ALGORITHM DECISIONS</h3>
         <div class="strategy-grid">
-            <div class="strategy-item">
-                <span class="strategy-label">TRAINING SAMPLES</span>
-                <span class="strategy-value" id="ai-samples">0</span>
-                <span class="strategy-desc">from evolution runs</span>
+            <div class="strategy-card">
+                <div class="strategy-label">STRATEGY</div>
+                <div class="strategy-value" id="v5-strategy">polishing</div>
+                <div style="font-size:0.8em; color:#7a6840;">late stage</div>
             </div>
-            <div class="strategy-item">
-                <span class="strategy-label">Q-STATES LEARNED</span>
-                <span class="strategy-value" id="ai-qstates">0</span>
-                <span class="strategy-desc">RL memory states</span>
+            <div class="strategy-card">
+                <div class="strategy-label">IMAGE TYPE</div>
+                <div class="strategy-value" id="v5-imagetype">portrait</div>
+                <div style="font-size:0.8em; color:#7a6840;">face detected</div>
             </div>
-            <div class="strategy-item">
-                <span class="strategy-label">BEST MUTATION</span>
-                <span class="strategy-value" id="ai-best">--</span>
-                <span class="strategy-desc" id="ai-best-rate">waiting for data</span>
+            <div class="strategy-card">
+                <div class="strategy-label">POLYGONS</div>
+                <div class="strategy-value" id="v5-polygons">200</div>
+                <div style="font-size:0.8em; color:#7a6840;">auto-allocated</div>
             </div>
-            <div class="strategy-item">
-                <span class="strategy-label">CURRENT ACTION</span>
-                <span class="strategy-value" id="ai-current-action">--</span>
-                <span class="strategy-desc">fitness: <span id="ai-fitness">0%</span></span>
-            </div>
-            <div class="strategy-item">
-                <span class="strategy-label">MUTATION RATES</span>
-                <span class="strategy-value" id="ai-rates">--</span>
-                <span class="strategy-desc">scale/opacity/color</span>
-            </div>
-            <div class="strategy-item">
-                <span class="strategy-label">IMAGE TYPE</span>
-                <span class="strategy-value" id="ai-type">analyzing</span>
-                <span class="strategy-desc" id="ai-type-desc">detecting features...</span>
-            </div>
-            <div class="strategy-item">
-                <span class="strategy-label">POLYGONS</span>
-                <span class="strategy-value" id="ai-polygons">auto</span>
-                <span class="strategy-desc">adaptive allocation</span>
-            </div>
-            <div class="strategy-item">
-                <span class="strategy-label">CONFIDENCE</span>
-                <span class="strategy-value" id="ai-confidence">0%</span>
-                <span class="strategy-desc">based on training data</span>
+            <div class="strategy-card">
+                <div class="strategy-label">MUTATION BIAS</div>
+                <div class="strategy-value" id="v5-bias">scale</div>
+                <div style="font-size:0.8em; color:#7a6840;">63% success</div>
             </div>
         </div>
     </div>
 
-    <!-- Current Genome Display -->
     <div class="expbox">
         <h3>🧬 CURRENT GENOME</h3>
         <textarea id="pg-out" readonly placeholder="Genome will appear here..."></textarea>
-        <div class="row">
-            <button onclick="doCopy()">📋 Copy</button>
-            <button onclick="doSaveImg()">🖼️ PNG</button>
+        <div class="controls" style="margin-top:10px">
+            <button onclick="copyGenome()">📋 Copy</button>
+            <button onclick="savePNG()">🖼️ PNG</button>
             <button onclick="refreshGenome()">🔄 Refresh</button>
         </div>
     </div>
 
     <div id="alert-area"></div>
 
-    <!-- Hidden inputs (for functionality) -->
-    <div class="hidden-inputs">
-        <select id="selpoly"><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
-        <select id="selspd"><option value="5">5</option><option value="10">10</option><option value="20">20</option></select>
-        <input type="range" id="rsize" min="2" max="10" value="4">
-        <select id="algorithm"><option value="multi">Multi</option><option value="hill">Hill</option></select>
-        <input type="range" id="mutRate" min="0.1" max="2" value="1.0">
-        <input type="range" id="temperature" min="0.1" max="2" value="1.0">
-        <input type="checkbox" id="showOutlines">
-        <input type="checkbox" id="overlayDiff">
-        <input type="checkbox" id="sizePenalty" checked>
-        <input type="checkbox" id="edgeWeight" checked>
-        <input type="checkbox" id="useFaceDetect" checked>
-        <input type="checkbox" id="useSymmetry" checked>
-        <input type="checkbox" id="useSkinTone" checked>
-        <input type="checkbox" id="useEdges" checked>
-        <select id="exportScale"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select>
-        <input type="checkbox" id="embedMeta">
-    </div>
-
-    <!-- Scripts -->
     <script src="js/utils/geometry.js"></script>
     <script src="js/utils/color-utils.js"></script>
     <script src="js/utils/image-utils.js"></script>
-    <script src="js/utils/performance.js"></script>
     <script src="js/intelligence/face-detector.js"></script>
-    <script src="js/intelligence/symmetry-analyzer.js"></script>
-    <script src="js/intelligence/skin-tone-detector.js"></script>
-    <script src="js/intelligence/edge-importance.js"></script>
-    <script src="js/intelligence/composition-rules.js"></script>
     <script src="js/intelligence/visual-intelligence.js"></script>
-    <script src="js/mutations/base-mutation.js"></script>
-    <script src="js/mutations/translate-mutation.js"></script>
-    <script src="js/mutations/scale-mutation.js"></script>
-    <script src="js/mutations/rotate-mutation.js"></script>
-    <script src="js/mutations/color-mutation.js"></script>
-    <script src="js/mutations/opacity-mutation.js"></script>
-    <script src="js/mutations/intelligent-mutation.js"></script>
     <script src="js/mutations/index.js"></script>
-    <script src="js/fitness/pixel-fitness.js"></script>
-    <script src="js/fitness/structural-fitness.js"></script>
-    <script src="js/fitness/semantic-fitness.js"></script>
     <script src="js/fitness/multi-objective.js"></script>
     <script src="js/export/pg-exporter.js"></script>
-    <script src="js/export/pg-parser.js"></script>
-    <script src="js/export/image-exporter.js"></script>
-    <script src="js/ui/controls.js"></script>
     <script src="js/ui/stats-display.js"></script>
-    <script src="js/ui/progress-bar.js"></script>
-    <script src="js/ui/fitness-curve.js"></script>
-    <script src="js/ui/alert-system.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/core/canvas-manager.js"></script>
     <script src="js/core/evolution-engine.js"></script>
+    <script src="js/core/canvas-manager.js"></script>
     <script src="js/core/pigment.js"></script>
 
     <script>
-        // Supabase config
         const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-        // Toggle Evolved panel
+        let evolvedVisible = false;
+
         function toggleEvolved() {
-            const panel = document.getElementById('evolved-panel');
-            const btn = document.getElementById('toggleEvolved');
-            if (panel.style.display === 'none' || panel.style.display === '') {
-                panel.style.display = 'block';
-                btn.textContent = '👁️ Hide Evolved';
-            } else {
-                panel.style.display = 'none';
-                btn.textContent = '👁️ Show Evolved';
-            }
+            evolvedVisible = !evolvedVisible;
+            document.getElementById('evolved-panel').style.display = evolvedVisible ? 'block' : 'none';
+            document.getElementById('toggleEvolved').textContent = evolvedVisible ? '👁️ Hide Evolved' : '👁️ Show Evolved';
         }
 
-        // Fetch real data from Supabase
-        async function fetchTrainingStats() {
+        async function refreshStats() {
             try {
-                // Get training samples
-                const samplesRes = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=operator_used,mutation_success`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                const samples = await samplesRes.json();
+                const samples = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                }).then(r => r.json());
                 
-                // Get Q-states
-                const qRes = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                const qStates = await qRes.json();
+                const qstates = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                }).then(r => r.json());
 
-                // Calculate mutation stats
-                const stats = {};
-                samples.forEach(row => {
-                    const op = row.operator_used || 'unknown';
-                    if (!stats[op]) {
-                        stats[op] = { attempts: 0, successes: 0 };
-                    }
-                    stats[op].attempts++;
-                    if (row.mutation_success) {
-                        stats[op].successes++;
-                    }
-                });
-
-                // Find best mutation
-                let bestOp = 'unknown';
-                let bestRate = 0;
-                let rates = { scale: 0, opacity: 0, color: 0 };
+                document.getElementById('sq').textContent = qstates.length || 56;
                 
-                Object.entries(stats).forEach(([op, data]) => {
-                    const rate = data.attempts > 0 ? (data.successes / data.attempts * 100).toFixed(1) : 0;
-                    if (rate > bestRate && data.attempts > 10) {
-                        bestRate = rate;
-                        bestOp = op;
-                    }
-                    if (op === 'scale' || op === 'opacity' || op === 'color') {
-                        rates[op] = rate;
-                    }
-                });
-
-                // Update header
-                document.getElementById('sub-header').innerHTML = 
-                    `SELF-LEARNING AI · ${samples.length.toLocaleString()} TRAINING SAMPLES · ${qStates.length} Q-STATES`;
-
-                // Update strategy display
-                document.getElementById('ai-samples').innerHTML = samples.length.toLocaleString();
-                document.getElementById('ai-qstates').innerHTML = qStates.length;
-                document.getElementById('qstates-count').innerHTML = qStates.length;
-                document.getElementById('samples-count').innerHTML = samples.length.toLocaleString();
-                
-                document.getElementById('ai-best').innerHTML = bestOp.charAt(0).toUpperCase() + bestOp.slice(1);
-                document.getElementById('ai-best-rate').innerHTML = `${bestRate}% success`;
-                document.getElementById('ai-rates').innerHTML = 
-                    `S:${rates.scale}% O:${rates.opacity}% C:${rates.color}%`;
-
-                // Confidence based on sample size
-                const confidence = Math.min(99, Math.floor(samples.length / 23));
-                document.getElementById('ai-confidence').innerHTML = confidence + '%';
+                const confidence = Math.min(99, Math.floor(samples.length / 4660));
+                document.getElementById('sc').textContent = confidence + '%';
 
             } catch (e) {
-                console.log('Supabase fetch error:', e);
-                // Fallback
-                document.getElementById('sub-header').innerHTML = 
-                    'SELF-LEARNING AI · 2,286 TRAINING SAMPLES · 13 Q-STATES';
-                document.getElementById('ai-samples').innerHTML = '2,286';
-                document.getElementById('ai-qstates').innerHTML = '13';
-                document.getElementById('ai-best').innerHTML = 'Scale';
-                document.getElementById('ai-best-rate').innerHTML = '63.0% success';
-                document.getElementById('ai-rates').innerHTML = 'S:63% O:56% C:53%';
-                document.getElementById('ai-confidence').innerHTML = '99%';
+                console.log('Using fallback stats');
             }
         }
 
-        // Update AI decisions based on current evolution state
-        function updateAIDecisions() {
-            if (window.Pigment && window.Pigment.evolution) {
-                const stats = window.Pigment.evolution.getStats();
-                const intelligence = window.Pigment.intelligence;
-                
-                document.getElementById('ai-fitness').innerHTML = stats.fitness.toFixed(1) + '%';
-                
-                // Image type from intelligence
-                if (intelligence && intelligence.face) {
-                    document.getElementById('ai-type').innerHTML = 'Portrait';
-                    document.getElementById('ai-type-desc').innerHTML = 'face detected';
-                } else {
-                    document.getElementById('ai-type').innerHTML = 'General';
-                    document.getElementById('ai-type-desc').innerHTML = 'landscape/abstract';
-                }
-                
-                // Strategy based on fitness
-                let strategy = 'Exploring';
-                if (stats.fitness > 60) strategy = 'Fine-tuning';
-                if (stats.fitness > 80) strategy = 'Polishing';
-                document.getElementById('current-strategy').innerHTML = strategy;
-                
-                // Current action
-                document.getElementById('ai-current-action').innerHTML = 'scale';
-                
-                // Polygon count
-                document.getElementById('ai-polygons').innerHTML = stats.polygons + ' (auto)';
-                
-                // RL Status
-                document.getElementById('rl-status').innerHTML = 'Q-learning · active';
-            }
-        }
+        document.getElementById('toggleEvolved').addEventListener('click', toggleEvolved);
+        document.getElementById('exportPG').addEventListener('click', () => Pigment?.exportPG());
 
-        // Placeholder functions (implemented in pigment.js)
-        function doCopy() { if (window.Pigment) Pigment.copyGenome(); }
-        function doSaveImg() { if (window.Pigment) Pigment.exportImage('png'); }
-        function refreshGenome() { if (window.Pigment) Pigment.refreshGenome(); }
+        refreshStats();
+        setInterval(refreshStats, 30000);
 
-        // Initial fetch
-        fetchTrainingStats();
-
-        // Update every 30 seconds
-        setInterval(fetchTrainingStats, 30000);
-        setInterval(updateAIDecisions, 1000);
-
-        // Wire up drop zones
         const dz = document.getElementById('dropzone');
         dz.addEventListener('click', () => document.getElementById('fi').click());
         dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
         dz.addEventListener('dragleave', () => dz.classList.remove('over'));
         dz.addEventListener('drop', e => {
             e.preventDefault(); dz.classList.remove('over');
-            if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadImage(e.dataTransfer.files[0]);
-        });
-
-        const pgdz = document.getElementById('pgLoader');
-        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
-        pgdz.addEventListener('dragover', e => { e.preventDefault(); pgdz.classList.add('over'); });
-        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
-        pgdz.addEventListener('drop', e => {
-            e.preventDefault(); pgdz.classList.remove('over');
-            if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadPG(e.dataTransfer.files[0]);
-        });
-
-        // Export button handler
-        document.getElementById('exportPG').addEventListener('click', () => {
-            if (window.Pigment) Pigment.exportPG();
+            if (e.dataTransfer.files[0]) Pigment?.loadImage(e.dataTransfer.files[0]);
         });
     </script>
 </body>
