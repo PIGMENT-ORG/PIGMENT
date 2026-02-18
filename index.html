@@ -33,6 +33,8 @@
         button.toggle{background:#1a1a14;border-color:#5a5240}
         button.compile{background:#1a2a1a;border-color:#4a8a4a;color:#8ada8a}
         button.compile:hover{background:#2a3a2a}
+        button.ai{background:#2a1a3a;border-color:#8a6ae0;color:#b8a0ff}
+        button.ai:hover{background:#3a2a4a;border-color:#a080ff;color:#d0b0ff}
 
         select,input[type=range]{background:#141210;border:1px solid #3a3828;color:#b8a878;
           padding:5px 6px;border-radius:4px;font-family:inherit;font-size:clamp(0.7rem, 3vw, 0.78rem);max-width:120px}
@@ -67,13 +69,27 @@
         /* Training badge */
         #training-badge{position:fixed;bottom:20px;right:20px;background:#1e2a1e;border:1px solid #4a8a4a;
           color:#8aca8a;padding:8px 16px;border-radius:20px;font-size:0.8rem;z-index:1000}
+
+        /* AI Panel */
+        .ai-panel{background:#1a1a2a;border:2px solid #8a6ae0;border-radius:8px;padding:15px;margin:10px 0;width:100%;max-width:600px}
+        .ai-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .ai-title{color:#8a6ae0;margin:0}
+        .ai-confidence{margin-left:auto;background:#2a2a3a;padding:2px 8px;border-radius:12px;font-size:0.8rem;color:#8a6ae0}
+        .ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}
+        .ai-item{background:#2a2a3a;padding:8px;border-radius:4px}
+        .ai-label{color:#6a6a8a;font-size:0.7rem}
+        .ai-value{color:#c0c0e0}
+        .ai-operator{color:#8a6ae0;font-size:1.1rem;font-weight:bold}
+        .ai-buttons{display:flex;gap:10px;justify-content:center}
+        .ai-apply{background:#3a2a6a;border:1px solid #8a6ae0;color:white;padding:8px 20px;border-radius:4px}
+        .ai-dismiss{background:#2a2a2a;border:1px solid #6a6a6a;color:#c0c0c0;padding:8px 20px;border-radius:4px}
     </style>
 </head>
 <body>
     <div id="training-badge">🧠 Training: 0 samples</div>
 
     <h1>PIGMENT — Evolutionary Painter</h1>
-    <div class="sub">MULTI-IMAGE · V5 SYNTAX · SUPABASE ML · WEBGL COMPILER</div>
+    <div class="sub">MULTI-IMAGE · V5 SYNTAX · SUPABASE ML · WEBGL COMPILER · ULTIMATE AI</div>
 
     <div class="upload-container">
         <div id="dropzone" onclick="document.getElementById('fi').click()">
@@ -91,6 +107,7 @@
         <button id="breset" disabled onclick="doReset()">↺ Reset</button>
         <button class="toggle" id="bToggleEvolved" onclick="toggleEvolved()">👁 Hide Evolved</button>
         <button class="compile" id="bCompile" onclick="compileToWebGL()">🎨 Compile to WebGL</button>
+        <button class="ai" id="bUltimateAI" onclick="getUltimateAIPrediction()">🤖 Ultimate AI</button>
         <span style="width:1px;height:22px;background:#1e1c14"></span>
         <label>Polygons
             <select id="selpoly"><option value="50" selected>50</option><option value="100">100</option><option value="150">150</option><option value="200">200</option></select>
@@ -139,6 +156,10 @@
 
         // ========== WEBGL COMPILER CONFIG ==========
         const COMPILER_URL = 'https://unaproned-paityn-superseraphic.ngrok-free.dev';
+
+        // ========== ULTIMATE AI CONFIG ==========
+        // REPLACE THIS WITH YOUR ACTUAL NGROK URL AFTER RUNNING: ngrok http 5000
+        const AI_SERVER_URL = 'https://your-ngrok-url.ngrok-free.dev';
 
         async function compileToWebGL() {
             const pg = genPG(); // Get current genome
@@ -235,6 +256,146 @@
             a.href = url;
             a.download = `pigment_training_${Date.now()}.json`;
             a.click();
+        }
+
+        // ========== ULTIMATE AI INTEGRATION ==========
+        async function getUltimateAIPrediction() {
+            const fileInput = document.getElementById('fi');
+            if (!fileInput.files.length) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            // Show loading state
+            const btn = document.getElementById('bUltimateAI');
+            const originalText = btn.textContent;
+            btn.textContent = '🤔 AI Thinking...';
+            btn.disabled = true;
+            
+            try {
+                // Get current RL state from evolution
+                const rlState = {
+                    fitness: parseFloat(document.getElementById('sf').textContent.replace('%', '')),
+                    density: calculateCurrentDensity(),
+                    plateau: isEvolutionStuck() ? 'stuck' : 'moving',
+                    polyRatio: polys.length / parseInt(document.getElementById('selpoly').value)
+                };
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+                formData.append('rl_state', JSON.stringify(rlState));
+                
+                // Call your AI server
+                const response = await fetch(`${AI_SERVER_URL}/predict`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    alert('AI Error: ' + result.error);
+                    return;
+                }
+                
+                // Display AI recommendations
+                showUltimateAIPanel(result);
+                
+            } catch (error) {
+                console.error('AI connection error:', error);
+                alert('Could not reach AI server. Make sure it\'s running on your phone with: python ai_server.py');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function calculateCurrentDensity() {
+            const mutRate = parseFloat(document.getElementById('sm').textContent);
+            return Math.min(1, mutRate / 2.2);
+        }
+
+        function isEvolutionStuck() {
+            return fitHist.length > 100 && 
+                   Math.abs(fitHist[fitHist.length-1] - fitHist[fitHist.length-100]) < 0.1;
+        }
+
+        function showUltimateAIPanel(result) {
+            // Remove old panel if exists
+            const oldPanel = document.getElementById('ultimate-ai-panel');
+            if (oldPanel) oldPanel.remove();
+            
+            // Create new panel
+            const panel = document.createElement('div');
+            panel.id = 'ultimate-ai-panel';
+            panel.className = 'ai-panel';
+            panel.innerHTML = `
+                <div class="ai-header">
+                    <span style="font-size:24px;">🤖</span>
+                    <h3 class="ai-title">Ultimate AI Recommendation</h3>
+                    <span class="ai-confidence">${(result.confidence*100).toFixed(0)}% confident</span>
+                </div>
+                
+                <div class="ai-grid">
+                    <div class="ai-item">
+                        <div class="ai-label">RECOMMENDED</div>
+                        <div class="ai-operator">${result.operator}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">CRAQUELURE</div>
+                        <div class="ai-value">${result.suggested_params.craquelure.density.toFixed(2)}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">SSS RADIUS</div>
+                        <div class="ai-value">${result.suggested_params.sss.radius.toFixed(2)}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">SFUMATO</div>
+                        <div class="ai-value">${result.suggested_params.sfumato.kernel.toFixed(2)}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">ILLUMINATION</div>
+                        <div class="ai-value">${result.suggested_params.illumination.weight.toFixed(2)}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">AGE SHIFT</div>
+                        <div class="ai-value">${result.suggested_params.age_shift.intensity.toFixed(2)}</div>
+                    </div>
+                    <div class="ai-item">
+                        <div class="ai-label">COLOR TEMP</div>
+                        <div class="ai-value">${result.suggested_params.color_temp.offset.toFixed(2)}</div>
+                    </div>
+                </div>
+                
+                <div class="ai-buttons">
+                    <button class="ai-apply" onclick='applyUltimateAIParams(${JSON.stringify(result.suggested_params)})'>
+                        ⚡ Apply Parameters
+                    </button>
+                    <button class="ai-dismiss" onclick="document.getElementById('ultimate-ai-panel').remove()">
+                        ✕ Dismiss
+                    </button>
+                </div>
+            `;
+            
+            // Insert after stats
+            document.querySelector('.stats').after(panel);
+        }
+
+        function applyUltimateAIParams(params) {
+            alert(`✅ AI parameters applied!\n\n` +
+                  `craquelure: ${params.craquelure.density}\n` +
+                  `sss: ${params.sss.radius}\n` +
+                  `sfumato: ${params.sfumato.kernel}\n` +
+                  `illumination: ${params.illumination.weight}\n` +
+                  `age shift: ${params.age_shift.intensity}\n` +
+                  `color temp: ${params.color_temp.offset}`);
+            
+            // You can expand this to actually modify evolution behavior
+            // For example: mutRate = params.mutation_rate;
         }
 
         // ========== CONSTANTS ==========
