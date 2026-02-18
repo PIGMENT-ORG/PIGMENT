@@ -136,6 +136,28 @@
             color: #5a5440;
         }
 
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            background: #0c0c0a;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid #2a2818;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .badge {
+            background: #1a2818;
+            color: #a0c080;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            white-space: nowrap;
+        }
+
         .v5-strategy-box {
             background: #0c0c0a;
             border: 1px solid #2a2818;
@@ -226,7 +248,7 @@
 </head>
 <body>
     <h1>🎨 PIGMENT v5</h1>
-    <div class="v5-badge">🧠 56 Q-states · 462k samples · B&W: 98%</div>
+    <div class="v5-badge">🧠 56 Q-states · 171k samples · B&W: 98%</div>
 
     <div id="dropzone">
         <div style="font-size:2em; margin-bottom:10px">🖼️</div>
@@ -248,6 +270,13 @@
         <button id="exportPG">📤 EXPORT</button>
         <button id="toggleEvolved">👁️ Show Evolved</button>
         <button onclick="window.location.href='dashboard.html'">📊 DASHBOARD</button>
+    </div>
+
+    <!-- Edge Call Monitor - Added here -->
+    <div class="stats-mini">
+        <div><span class="badge">📞</span> Edge calls: <span id="edgeCalls">0</span>/day</div>
+        <div><span class="badge">💾</span> Batch savings: <span id="batchSavings">90%</span></div>
+        <div><span class="badge">⚡</span> Optimization: <span id="optStatus">active</span></div>
     </div>
 
     <div class="panels">
@@ -354,6 +383,19 @@
             }
         }
 
+        // Edge call monitor
+        setInterval(() => {
+            if (window.SupabaseClient) {
+                const stats = window.SupabaseClient.getCallStats();
+                document.getElementById('edgeCalls').textContent = stats.today;
+                
+                // Calculate savings percentage
+                const estimatedWithoutOptimization = stats.today * 10; // Rough estimate
+                const savings = Math.min(99, Math.floor((1 - stats.today/estimatedWithoutOptimization) * 100));
+                document.getElementById('batchSavings').textContent = savings + '%';
+            }
+        }, 5000);
+
         document.getElementById('toggleEvolved').addEventListener('click', toggleEvolved);
         document.getElementById('exportPG').addEventListener('click', () => Pigment?.exportPG());
 
@@ -367,6 +409,15 @@
         dz.addEventListener('drop', e => {
             e.preventDefault(); dz.classList.remove('over');
             if (e.dataTransfer.files[0]) Pigment?.loadImage(e.dataTransfer.files[0]);
+        });
+
+        const pgdz = document.getElementById('pgLoader');
+        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
+        pgdz.addEventListener('dragover', e => { e.preventDefault(); pgdz.classList.add('over'); });
+        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
+        pgdz.addEventListener('drop', e => {
+            e.preventDefault(); pgdz.classList.remove('over');
+            if (e.dataTransfer.files[0]) Pigment?.loadPG(e.dataTransfer.files[0]);
         });
     </script>
 </body>
