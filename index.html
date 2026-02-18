@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>🎨 PIGMENT</h1>
-    <div class="sub">EVOLUTIONARY ART · MULTI-OBJECTIVE · SEMANTIC VISION</div>
+    <div class="sub">EVOLUTIONARY ART · MULTI-OBJECTIVE · SEMANTIC VISION · SUPABASE ML</div>
 
     <div id="dropzone">
         <div class="drop-icon">🖼️</div>
@@ -133,16 +133,21 @@
 
     <div id="alert-area"></div>
 
+    <!-- Utility Scripts -->
     <script src="js/utils/geometry.js"></script>
     <script src="js/utils/color-utils.js"></script>
     <script src="js/utils/image-utils.js"></script>
     <script src="js/utils/performance.js"></script>
+    
+    <!-- Intelligence Modules -->
     <script src="js/intelligence/face-detector.js"></script>
     <script src="js/intelligence/symmetry-analyzer.js"></script>
     <script src="js/intelligence/skin-tone-detector.js"></script>
     <script src="js/intelligence/edge-importance.js"></script>
     <script src="js/intelligence/composition-rules.js"></script>
     <script src="js/intelligence/visual-intelligence.js"></script>
+    
+    <!-- Mutation Modules -->
     <script src="js/mutations/base-mutation.js"></script>
     <script src="js/mutations/translate-mutation.js"></script>
     <script src="js/mutations/scale-mutation.js"></script>
@@ -151,21 +156,33 @@
     <script src="js/mutations/opacity-mutation.js"></script>
     <script src="js/mutations/intelligent-mutation.js"></script>
     <script src="js/mutations/index.js"></script>
+    
+    <!-- Fitness Modules -->
     <script src="js/fitness/pixel-fitness.js"></script>
     <script src="js/fitness/structural-fitness.js"></script>
     <script src="js/fitness/semantic-fitness.js"></script>
     <script src="js/fitness/multi-objective.js"></script>
+    
+    <!-- Export Modules -->
     <script src="js/export/pg-exporter.js"></script>
     <script src="js/export/pg-parser.js"></script>
     <script src="js/export/image-exporter.js"></script>
+    
+    <!-- UI Modules -->
     <script src="js/ui/controls.js"></script>
     <script src="js/ui/stats-display.js"></script>
     <script src="js/ui/progress-bar.js"></script>
     <script src="js/ui/fitness-curve.js"></script>
     <script src="js/ui/alert-system.js"></script>
+    
+    <!-- Supabase ML Client -->
+    <script src="js/supabase-client.js"></script>
+    
+    <!-- Core Modules -->
     <script src="js/core/canvas-manager.js"></script>
     <script src="js/core/evolution-engine.js"></script>
     <script src="js/core/pigment.js"></script>
+    
     <script>
         // Wire up drop zones and file inputs
         const dz = document.getElementById('dropzone');
@@ -176,6 +193,7 @@
             e.preventDefault(); dz.classList.remove('over');
             if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadImage(e.dataTransfer.files[0]);
         });
+        
         const pgdz = document.getElementById('pgLoader');
         pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
         pgdz.addEventListener('dragover', e => { e.preventDefault(); pgdz.classList.add('over'); });
@@ -183,6 +201,16 @@
         pgdz.addEventListener('drop', e => {
             e.preventDefault(); pgdz.classList.remove('over');
             if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadPG(e.dataTransfer.files[0]);
+        });
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+            });
         });
     </script>
 </body>
