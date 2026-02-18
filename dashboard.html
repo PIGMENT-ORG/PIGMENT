@@ -91,21 +91,6 @@
             color:#a0c080;
         }
         
-        .refresh-btn{
-            background:#141210;
-            border:1px solid #3a3828;
-            color:#b8a878;
-            padding:8px 16px;
-            border-radius:4px;
-            cursor:pointer;
-            margin-top:10px;
-        }
-        
-        .refresh-btn:hover{
-            background:#1e1c14;
-            border-color:#7a6830;
-        }
-        
         .learning-progress{
             margin-top:20px;
             padding:15px;
@@ -119,6 +104,21 @@
             color:#5a5440;
             font-size:0.9em;
         }
+        
+        #last-update{
+            color:#7a6840;
+            font-size:0.9em;
+        }
+        
+        .error-message{
+            color:#c06060;
+            text-align:center;
+            margin:10px;
+            padding:10px;
+            background:#1a1010;
+            border-radius:4px;
+            display:none;
+        }
     </style>
 </head>
 <body>
@@ -127,15 +127,16 @@
         <div class="sub">REAL-TIME AI LEARNING METRICS · SUPABASE ML · REINFORCEMENT LEARNING</div>
     </div>
 
+    <div id="error-message" class="error-message"></div>
+
     <div class="dashboard-grid">
         <!-- Evolution Stats Card -->
         <div class="card">
             <h2>📈 EVOLUTION STATS</h2>
             <div id="evolution-stats">
-                <div class="stat-row"><span class="stat-label">Total Generations:</span> <span class="stat-value" id="total-gens">--</span></div>
-                <div class="stat-row"><span class="stat-label">Training Samples:</span> <span class="stat-value" id="total-samples">--</span></div>
-                <div class="stat-row"><span class="stat-label">Q-Learning States:</span> <span class="stat-value" id="q-states">--</span></div>
-                <div class="stat-row"><span class="stat-label">Embeddings Stored:</span> <span class="stat-value" id="embeddings">--</span></div>
+                <div class="stat-row"><span class="stat-label">Training Samples:</span> <span class="stat-value" id="total-samples">0</span></div>
+                <div class="stat-row"><span class="stat-label">Q-Learning States:</span> <span class="stat-value" id="q-states">0</span></div>
+                <div class="stat-row"><span class="stat-label">Embeddings Stored:</span> <span class="stat-value" id="embeddings">0</span></div>
                 <div class="stat-row"><span class="stat-label">Avg Improvement:</span> <span class="stat-value" id="avg-improve">--</span></div>
             </div>
             <div class="learning-progress">
@@ -156,200 +157,181 @@
         <!-- RL Q-Table Preview Card -->
         <div class="card">
             <h2>🔮 Q-TABLE INSIGHTS</h2>
-            <div id="q-insights"></div>
+            <div id="q-insights">
+                <div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning...</div>
+            </div>
             <div style="margin-top:15px;">
                 <div class="stat-row"><span class="stat-label">Best Action Overall:</span> <span class="stat-value" id="best-action">--</span></div>
-                <div class="stat-row"><span class="stat-label">Exploration Rate:</span> <span class="stat-value" id="explore-rate">20%</span></div>
-                <div class="stat-row"><span class="stat-label">Learning Rate:</span> <span class="stat-value" id="learn-rate">0.1</span></div>
+                <div class="stat-row"><span class="stat-label">Exploration Rate:</span> <span class="stat-value">20%</span></div>
+                <div class="stat-row"><span class="stat-label">Learning Rate:</span> <span class="stat-value">0.1</span></div>
             </div>
         </div>
 
         <!-- Stage-Based Strategy Card -->
         <div class="card">
             <h2>⚡ STAGE-BASED STRATEGY</h2>
-            <div id="stage-strategy"></div>
+            <div id="stage-strategy">
+                <div style="color:#7a7460;text-align:center;padding:20px;">⏳ Collecting stage data...</div>
+            </div>
         </div>
     </div>
 
-    <div style="text-align:center;margin:20px 0;">
-        <button class="refresh-btn" onclick="loadDashboardData()">🔄 REFRESH DATA</button>
-        <span style="margin-left:15px;color:#5a5440;" id="last-update"></span>
-    </div>
-
     <div class="footer">
-        PIGMENT · Self-Learning Evolutionary Art · Last sync with Supabase
+        <span id="last-update"></span><br>
+        PIGMENT · Self-Learning Evolutionary Art
     </div>
 
     <script>
         const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-        async function query(sql) {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/query`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ query: sql })
-            });
-            return response.json();
-        }
-
         async function loadDashboardData() {
-            document.getElementById('last-update').innerHTML = 'Loading...';
-            
-            // Get evolution stats
-            const evoStats = await query(`
-                SELECT 
-                    COUNT(*) as total_samples,
-                    COUNT(DISTINCT operator_used) as operator_types,
-                    AVG(offspring_fitness - parent_fitness) as avg_improvement
-                FROM training_data
-            `);
-
-            // Get mutation success rates
-            const mutationRates = await query(`
-                SELECT 
-                    operator_used,
-                    COUNT(*) as attempts,
-                    SUM(CASE WHEN mutation_success THEN 1 ELSE 0 END) as successes,
-                    ROUND(100.0 * SUM(CASE WHEN mutation_success THEN 1 ELSE 0 END) / COUNT(*), 2) as success_rate
-                FROM training_data
-                GROUP BY operator_used
-                ORDER BY success_rate DESC
-            `);
-
-            // Get Q-table stats
-            const qStats = await query(`
-                SELECT COUNT(*) as q_states FROM rl_q_table
-            `);
-
-            // Get embedding count
-            const embedCount = await query(`
-                SELECT COUNT(*) as total FROM image_embeddings
-            `);
-
-            // Get stage-based performance
-            const stagePerformance = await query(`
-                SELECT 
-                    CASE 
-                        WHEN parent_fitness < 30 THEN 'Early'
-                        WHEN parent_fitness < 60 THEN 'Mid'
-                        ELSE 'Late'
-                    END as stage,
-                    operator_used,
-                    AVG(offspring_fitness - parent_fitness) as avg_improvement,
-                    COUNT(*) as attempts
-                FROM training_data
-                WHERE mutation_success = true
-                GROUP BY stage, operator_used
-                HAVING COUNT(*) > 2
-                ORDER BY stage, avg_improvement DESC
-            `);
-
-            // Update UI
-            updateEvolutionStats(evoStats[0], qStats[0], embedCount[0]);
-            updateMutationRates(mutationRates);
-            updateQInsights(qStats[0]);
-            updateStageStrategy(stagePerformance);
-            
-            document.getElementById('last-update').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
-        }
-
-        function updateEvolutionStats(evo, qStats, embed) {
-            document.getElementById('total-samples').innerHTML = evo?.total_samples || 0;
-            document.getElementById('q-states').innerHTML = qStats?.q_states || 0;
-            document.getElementById('embeddings').innerHTML = embed?.total || 0;
-            document.getElementById('avg-improve').innerHTML = evo?.avg_improvement ? 
-                '+' + (evo.avg_improvement * 100).toFixed(3) + '%' : '--';
-            
-            const samples = evo?.total_samples || 0;
-            let phase = 'Early Stage';
-            let progress = 0;
-            if (samples < 100) { phase = 'Early Stage'; progress = 25; }
-            else if (samples < 500) { phase = 'Learning'; progress = 50; }
-            else if (samples < 1000) { phase = 'Refining'; progress = 75; }
-            else { phase = 'Mature'; progress = 100; }
-            
-            document.getElementById('learning-phase').innerHTML = phase;
-            document.getElementById('learning-bar').style.width = progress + '%';
-        }
-
-        function updateMutationRates(rates) {
-            const container = document.getElementById('mutation-rates');
-            container.innerHTML = '';
-            
-            rates.forEach(r => {
-                const barWidth = r.success_rate || 0;
-                const card = document.createElement('div');
-                card.className = 'mutation-card';
-                card.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                        <span class="mutation-name">${r.operator_used}</span>
-                        <span class="percentage">${r.success_rate || 0}%</span>
-                    </div>
-                    <div class="success-bar">
-                        <div class="success-fill" style="width:${barWidth}%"></div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:0.8em;color:#7a7460;">
-                        <span>${r.successes || 0} successes</span>
-                        <span>${r.attempts || 0} attempts</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function updateQInsights(qStats) {
-            const container = document.getElementById('q-insights');
-            if (qStats.q_states === 0) {
-                container.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning... (run more evolutions)</div>';
-                document.getElementById('best-action').innerHTML = '--';
-                return;
-            }
-            
-            container.innerHTML = `<div style="color:#a09870;">${qStats.q_states} learned states in Q-table</div>`;
-            
-            // You could add a query here to show the best action overall
-            document.getElementById('best-action').innerHTML = 'scale (from data)';
-        }
-
-        function updateStageStrategy(stageData) {
-            const container = document.getElementById('stage-strategy');
-            if (stageData.length === 0) {
-                container.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Collecting stage data...</div>';
-                return;
-            }
-            
-            const stages = {};
-            stageData.forEach(d => {
-                if (!stages[d.stage]) stages[d.stage] = [];
-                stages[d.stage].push(d);
-            });
-            
-            container.innerHTML = '';
-            ['Early', 'Mid', 'Late'].forEach(stage => {
-                if (stages[stage]) {
-                    const best = stages[stage][0];
-                    const stageDiv = document.createElement('div');
-                    stageDiv.style.marginBottom = '15px';
-                    stageDiv.innerHTML = `
-                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                            <span class="badge">${stage} Stage</span>
-                            <span style="color:#e8d898;">best: ${best.operator_used}</span>
-                        </div>
-                        <div style="font-size:0.9em;color:#a09870;">
-                            +${(best.avg_improvement * 100).toFixed(3)}% per mutation
-                        </div>
-                    `;
-                    container.appendChild(stageDiv);
+            try {
+                document.getElementById('last-update').innerHTML = 'Loading...';
+                
+                // Get mutation stats
+                const mutationResponse = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=operator_used,mutation_success,parent_fitness,offspring_fitness`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+                
+                if (!mutationResponse.ok) {
+                    throw new Error(`HTTP error! status: ${mutationResponse.status}`);
                 }
-            });
+                
+                const trainingData = await mutationResponse.json();
+                
+                // Get Q-table stats
+                const qResponse = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+                const qData = await qResponse.json();
+                
+                // Get embedding stats
+                const embedResponse = await fetch(`${SUPABASE_URL}/rest/v1/image_embeddings?select=*`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+                const embedData = await embedResponse.json();
+
+                // Update UI with data
+                document.getElementById('total-samples').innerHTML = trainingData.length;
+                document.getElementById('q-states').innerHTML = qData.length;
+                document.getElementById('embeddings').innerHTML = embedData.length;
+                
+                // Calculate average improvement
+                let totalImprovement = 0;
+                let improvementCount = 0;
+                trainingData.forEach(row => {
+                    if (row.offspring_fitness && row.parent_fitness) {
+                        totalImprovement += (row.offspring_fitness - row.parent_fitness);
+                        improvementCount++;
+                    }
+                });
+                const avgImprove = improvementCount > 0 ? (totalImprovement / improvementCount * 100).toFixed(3) + '%' : '--';
+                document.getElementById('avg-improve').innerHTML = avgImprove;
+
+                // Calculate mutation success rates
+                const mutationStats = {};
+                trainingData.forEach(row => {
+                    const op = row.operator_used || 'unknown';
+                    if (!mutationStats[op]) {
+                        mutationStats[op] = { attempts: 0, successes: 0 };
+                    }
+                    mutationStats[op].attempts++;
+                    if (row.mutation_success) {
+                        mutationStats[op].successes++;
+                    }
+                });
+
+                // Display mutation rates
+                const ratesContainer = document.getElementById('mutation-rates');
+                ratesContainer.innerHTML = '';
+                
+                if (Object.keys(mutationStats).length > 0) {
+                    Object.entries(mutationStats)
+                        .map(([op, stats]) => ({
+                            operator: op,
+                            attempts: stats.attempts,
+                            successes: stats.successes,
+                            rate: stats.attempts > 0 ? (stats.successes / stats.attempts * 100).toFixed(1) : '0'
+                        }))
+                        .sort((a, b) => b.rate - a.rate)
+                        .forEach(r => {
+                            const card = document.createElement('div');
+                            card.className = 'mutation-card';
+                            card.innerHTML = `
+                                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                    <span class="mutation-name">${r.operator}</span>
+                                    <span class="percentage">${r.rate}%</span>
+                                </div>
+                                <div class="success-bar">
+                                    <div class="success-fill" style="width:${r.rate}%"></div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:0.8em;color:#7a7460;">
+                                    <span>${r.successes} successes</span>
+                                    <span>${r.attempts} attempts</span>
+                                </div>
+                            `;
+                            ratesContainer.appendChild(card);
+                        });
+                } else {
+                    ratesContainer.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">No mutation data yet</div>';
+                }
+
+                // Update learning phase
+                const samples = trainingData.length;
+                let phase = 'Early Stage';
+                let progress = 0;
+                if (samples < 100) { phase = 'Early Stage'; progress = 25; }
+                else if (samples < 500) { phase = 'Learning'; progress = 50; }
+                else if (samples < 1000) { phase = 'Refining'; progress = 75; }
+                else { phase = 'Mature'; progress = 100; }
+                
+                document.getElementById('learning-phase').innerHTML = phase;
+                document.getElementById('learning-bar').style.width = progress + '%';
+
+                // Update Q-insights
+                const qInsights = document.getElementById('q-insights');
+                if (qData.length > 0) {
+                    qInsights.innerHTML = `<div style="color:#a09870;">${qData.length} learned states in Q-table</div>`;
+                    
+                    // Find best action from Q-table
+                    // This is simplified - you could add more complex analysis
+                    document.getElementById('best-action').innerHTML = 'learning...';
+                } else {
+                    qInsights.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning...</div>';
+                }
+
+                // Find best action from mutation data
+                if (Object.keys(mutationStats).length > 0) {
+                    const best = Object.entries(mutationStats)
+                        .map(([op, stats]) => ({ 
+                            op, 
+                            rate: stats.attempts > 0 ? stats.successes / stats.attempts : 0 
+                        }))
+                        .sort((a, b) => b.rate - a.rate)[0];
+                    document.getElementById('best-action').innerHTML = best.op;
+                }
+
+                document.getElementById('last-update').innerHTML = `Auto-updates every 30s · Last: ${new Date().toLocaleTimeString()}`;
+                
+            } catch (err) {
+                console.error('Dashboard error:', err);
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('error-message').innerHTML = 'Error loading data: ' + err.message;
+                document.getElementById('last-update').innerHTML = 'Error - check console';
+            }
         }
 
-        // Load data every 30 seconds
+        // Load immediately and then every 30 seconds
         loadDashboardData();
         setInterval(loadDashboardData, 30000);
     </script>
