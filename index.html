@@ -2,99 +2,517 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>PIGMENT — Evolutionary Painter</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:#080806;color:#c0b898;font-family:'Courier New',monospace;
-             min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;gap:14px}
-        h1{font-family:Georgia,serif;font-style:italic;font-size:1.55em;color:#e8d898;letter-spacing:.04em}
-        .sub{font-size:.7em;color:#44402e;letter-spacing:.08em}
-        #dropzone{border:2px dashed #3a3828;border-radius:8px;padding:28px 44px;text-align:center;
-          cursor:pointer;color:#5a5440;font-size:.83em;transition:all .2s}
-        #dropzone.over,#dropzone:hover{border-color:#b89838;color:#d8c878;background:rgba(184,152,56,.04)}
-        .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
-        button{background:#141210;border:1px solid #3a3828;color:#b8a878;padding:6px 16px;
-          border-radius:4px;cursor:pointer;font-family:inherit;font-size:.8em;letter-spacing:.04em;transition:all .15s}
-        button:hover{background:#1e1c14;border-color:#7a6830;color:#d8c878}
-        button:disabled{opacity:.35;cursor:not-allowed}
-        button.go{background:#1a1808;border-color:#c8a838;color:#e8d080}
-        button.go:hover{background:#242010}
-        select,input[type=range]{background:#141210;border:1px solid #3a3828;color:#b8a878;
-          padding:5px 8px;border-radius:4px;font-family:inherit;font-size:.78em}
-        label{font-size:.76em;color:#5a5440;display:flex;align-items:center;gap:6px}
-        .panels{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-        .panel{display:flex;flex-direction:column;align-items:center;gap:5px}
-        .plabel{font-size:.65em;color:#3a3828;letter-spacing:.09em;text-transform:uppercase}
-        canvas.view{border:1px solid #1e1c14;image-rendering:pixelated;image-rendering:crisp-edges}
-        .stats{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;font-size:.76em;color:#7a7460}
-        .sv{font-size:1.28em;color:#c0b080;font-family:Georgia,serif}
-        .sl{font-size:.67em;color:#3a3828;letter-spacing:.06em}
-        #crv{background:#0a0a08;border:1px solid #1e1c14;border-radius:3px;width:460px;max-width:96vw;height:72px}
-        .expbox{background:#0c0c0a;border:1px solid #1e1c14;border-radius:6px;padding:12px 16px;width:460px;max-width:96vw}
-        .expbox h3{font-family:Georgia,serif;font-size:.85em;color:#7a6840;margin-bottom:8px;letter-spacing:.04em}
-        #pg-out{width:100%;height:150px;background:#080806;border:1px solid #181612;color:#908860;
-          font-family:'Courier New',monospace;font-size:.7em;padding:8px;resize:vertical;outline:none}
-        .row{display:flex;gap:8px;margin-top:8px}
-        
-        /* New dashboard button */
-        .dashboard-link {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #080806;
+            color: #c0b898;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            gap: 12px;
+        }
+
+        h1 {
+            font-family: Georgia, serif;
+            font-style: italic;
+            font-size: clamp(1.2em, 5vw, 1.8em);
+            color: #e8d898;
+            letter-spacing: .04em;
+            text-align: center;
+        }
+
+        .sub {
+            font-size: clamp(0.6em, 3vw, 0.7em);
+            color: #44402e;
+            letter-spacing: .08em;
+            text-align: center;
+        }
+
+        /* Drop Zones */
+        #dropzone, #pgLoader {
+            border: 2px dashed #3a3828;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            color: #5a5440;
+            font-size: clamp(0.7em, 4vw, 0.83em);
+            transition: all .2s;
+            width: 100%;
+            max-width: 500px;
+            margin: 5px auto;
+        }
+
+        #dropzone.over, #pgLoader.over,
+        #dropzone:hover, #pgLoader:hover {
+            border-color: #b89838;
+            color: #d8c878;
+            background: rgba(184, 152, 56, .04);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        button {
             background: #141210;
-            border: 1px solid #c8a838;
+            border: 1px solid #3a3828;
+            color: #b8a878;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: clamp(0.7em, 3.5vw, 0.8em);
+            min-height: 44px;
+            transition: all .15s;
+        }
+
+        button:hover {
+            background: #1e1c14;
+            border-color: #7a6830;
+            color: #d8c878;
+        }
+
+        button:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
+        button.go {
+            background: #1a1808;
+            border-color: #c8a838;
             color: #e8d080;
+        }
+
+        button.go:hover {
+            background: #242010;
+        }
+
+        /* Canvas Panels */
+        .panels {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            flex: 1 1 200px;
+            min-width: 150px;
+        }
+
+        .plabel {
+            font-size: clamp(0.6em, 3vw, 0.65em);
+            color: #3a3828;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
+
+        canvas.view {
+            border: 1px solid #1e1c14;
+            image-rendering: pixelated;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 2/3;
+            max-width: 220px;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: clamp(0.7em, 3vw, 0.76em);
+            color: #7a7460;
+            background: #0c0c0a;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #1e1c14;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .sv {
+            font-size: clamp(1em, 4vw, 1.28em);
+            color: #c0b080;
+            font-family: Georgia, serif;
+        }
+
+        .sl {
+            font-size: clamp(0.6em, 2.5vw, 0.67em);
+            color: #3a3828;
+            letter-spacing: .06em;
+        }
+
+        /* Dashboard Button */
+        .dashboard-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #1a2818;
+            border: 1px solid #a0c080;
+            color: #d8f0c0;
             padding: 8px 16px;
             border-radius: 4px;
             text-decoration: none;
             font-size: 0.8em;
             z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
-        .dashboard-link:hover {
-            background: #242010;
+
+        .dashboard-btn:hover {
+            background: #2a3828;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3828;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #c8a838;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #5a7840;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            color: #a09870;
+            font-size: 0.8em;
+        }
+
+        /* Multi-image selector */
+        .multi-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background: #0c0c0a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #2a2818;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .image-counter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .image-counter span {
+            color: #c8a838;
+            font-weight: bold;
+        }
+
+        .thumbnails {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 5px 0;
+        }
+
+        .thumbnail {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #3a3828;
+            border-radius: 4px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .thumbnail:hover {
+            border-color: #c8a838;
+            transform: scale(1.1);
+        }
+
+        .thumbnail.active {
+            border: 2px solid #c8a838;
+            box-shadow: 0 0 10px rgba(200,168,56,0.5);
+        }
+
+        /* Progress bar */
+        #crv {
+            background: #0a0a08;
+            border: 1px solid #1e1c14;
+            border-radius: 3px;
+            width: 100%;
+            max-width: 700px;
+            height: clamp(60px, 15vw, 72px);
+        }
+
+        .expbox {
+            background: #0c0c0a;
+            border: 1px solid #1e1c14;
+            border-radius: 6px;
+            padding: 12px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .expbox h3 {
+            font-family: Georgia, serif;
+            font-size: clamp(0.8em, 4vw, 0.85em);
+            color: #7a6840;
+            margin-bottom: 8px;
+        }
+
+        #pg-out {
+            width: 100%;
+            height: 120px;
+            background: #080806;
+            border: 1px solid #181612;
+            color: #908860;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(0.65em, 3vw, 0.7em);
+            padding: 8px;
+            resize: vertical;
+            outline: none;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #alert-area {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .alert {
+            background: #2a2010;
+            border: 1px solid #c8a838;
+            color: #e8d080;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-size: clamp(0.7em, 3.5vw, 0.8em);
+        }
+
+        /* Hide elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                gap: 8px;
+            }
+            
+            .dashboard-btn {
+                top: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                font-size: 0.7em;
+            }
+            
+            .thumbnail {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .stats {
+                gap: 8px;
+            }
+            
+            .stat-item {
+                min-width: 50px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .thumbnail {
+                width: 35px;
+                height: 35px;
+            }
+            
+            button {
+                padding: 6px 8px;
+                font-size: 0.7em;
+            }
+        }
+
+        /* Touch-friendly */
+        @media (hover: none) and (pointer: coarse) {
+            button, #dropzone, #pgLoader {
+                min-height: 48px;
+            }
         }
     </style>
 </head>
 <body>
-    <a href="dashboard.html" class="dashboard-link">📊 DASHBOARD</a>
-    <a href="training.html" class="dashboard-link" style="right: 140px;">📦 TRAINING</a>
+    <a href="dashboard.html" class="dashboard-btn">📊 DASHBOARD</a>
 
     <h1>PIGMENT — Evolutionary Painter</h1>
-    <div class="sub">ROGER ALSING HILL-CLIMBING · PIGMENT V3 · SEMI-TRANSPARENT POLYGON GENOME</div>
+    <div class="sub">ROGER ALSING HILL-CLIMBING · PIGMENT V3 · MULTI-IMAGE SUPPORT</div>
 
-    <div id="dropzone" onclick="document.getElementById('fi').click()">
+    <!-- Drop Zones -->
+    <div id="dropzone">
         <div style="font-size:1.6em;margin-bottom:6px">🎨</div>
-        <div>Drop target image or click to choose</div>
+        <div>Drop images or click to choose (up to 5)</div>
+        <div style="margin-top:5px; font-size:0.8em; opacity:0.7" id="imageCountDisplay">0/5 images loaded</div>
     </div>
-    <input type="file" id="fi" accept="image/*" style="display:none">
+    <input type="file" id="fi" accept="image/*" multiple style="display:none">
 
+    <div id="pgLoader">
+        <div style="font-size:1.2em;margin-bottom:6px">🧬</div>
+        <div>Load .pg genome or paste (Ctrl+V)</div>
+    </div>
+    <input type="file" id="pgFile" accept=".pg" style="display:none">
+
+    <!-- Thumbnails for loaded images -->
+    <div id="thumbnails" class="thumbnails hidden"></div>
+
+    <!-- Multi-image selector -->
+    <div class="multi-selector" id="multiSelector" style="display:none;">
+        <div class="image-counter">
+            <span id="currentImageIndex">1</span>/<span id="totalImages">1</span>
+        </div>
+        <div class="controls" style="margin:0;">
+            <button id="prevImageBtn" disabled>◀ Prev</button>
+            <button id="nextImageBtn" disabled>Next ▶</button>
+        </div>
+        <div>
+            <span class="toggle-label">Auto-switch every:</span>
+            <select id="autoSwitchTime">
+                <option value="0">Off</option>
+                <option value="30">30 sec</option>
+                <option value="60" selected>1 min</option>
+                <option value="120">2 min</option>
+                <option value="300">5 min</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Toggle for evolved panel -->
+    <div class="toggle-container">
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggleEvolvedCheckbox">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Show Evolved Panel</span>
+    </div>
+
+    <!-- Main Controls -->
     <div class="controls">
-        <button class="go" id="bstart" disabled onclick="doStart()">▶ Start</button>
-        <button id="bpause" disabled onclick="doPause()">⏸ Pause</button>
-        <button id="breset" disabled onclick="doReset()">↺ Reset</button>
+        <button class="go" id="bstart" disabled>▶ Start</button>
+        <button id="bpause" disabled>⏸ Pause</button>
+        <button id="breset" disabled>↺ Reset</button>
         <span style="width:1px;height:22px;background:#1e1c14"></span>
         <label>Polygons
-            <select id="selpoly"><option value="50" selected>50</option><option value="100">100</option><option value="150">150</option><option value="200">200</option></select>
+            <select id="selpoly">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="150">150</option>
+                <option value="200">200</option>
+            </select>
         </label>
         <label>Speed
-            <select id="selspd"><option value="10">Slow (10)</option><option value="30" selected>Normal (30)</option><option value="80">Fast (80)</option><option value="200">Max (200)</option></select>
+            <select id="selspd">
+                <option value="5">Slow (5)</option>
+                <option value="10">Medium (10)</option>
+                <option value="20" selected>Normal (20)</option>
+                <option value="30">Fast (30)</option>
+                <option value="40">Turbo (40)</option>
+            </select>
         </label>
         <label>Max size <input type="range" id="rsize" min="2" max="9" step=".5" value="4" style="width:80px"></label>
     </div>
 
+    <!-- Canvas Panels -->
     <div class="panels">
         <div class="panel"><div class="plabel">Target</div><canvas class="view" id="cvt"></canvas></div>
-        <div class="panel"><div class="plabel">Evolved</div><canvas class="view" id="cve"></canvas></div>
+        <div class="panel" id="evolvedPanel"><div class="plabel">Evolved</div><canvas class="view" id="cve"></canvas></div>
         <div class="panel"><div class="plabel">Diff ×4</div><canvas class="view" id="cvd"></canvas></div>
     </div>
 
+    <!-- Stats -->
     <div class="stats">
-        <div><div class="sv" id="sg">0</div><div class="sl">Generation</div></div>
-        <div><div class="sv" id="sf">0.00%</div><div class="sl">Fitness</div></div>
-        <div><div class="sv" id="si">0</div><div class="sl">Improvements</div></div>
-        <div><div class="sv" id="sr">0/s</div><div class="sl">Mut/sec</div></div>
-        <div><div class="sv" id="sm">1.00</div><div class="sl">Mut rate</div></div>
+        <div class="stat-item"><div class="sv" id="sg">0</div><div class="sl">Generation</div></div>
+        <div class="stat-item"><div class="sv" id="sf">0.00%</div><div class="sl">Fitness</div></div>
+        <div class="stat-item"><div class="sv" id="si">0</div><div class="sl">Improvements</div></div>
+        <div class="stat-item"><div class="sv" id="sr">0/s</div><div class="sl">Mut/sec</div></div>
+        <div class="stat-item"><div class="sv" id="sm">1.00</div><div class="sl">Mut rate</div></div>
     </div>
 
     <canvas id="crv"></canvas>
@@ -110,365 +528,643 @@
         </div>
     </div>
 
+    <div id="alert-area"></div>
+
     <script>
         // ── Constants ──────────────────────────────────────────────────
-        const BASE_W=200, BASE_H=300;
-        let W=BASE_W, H=BASE_H;
-        let targetPx=null;
-        let polys=[], bestPolys=[], bestErr=Infinity;
-        let running=false, paused=false;
-        let gen=0, impr=0, mutRate=1.0;
-        let rateT={n:0,t:performance.now()};
-        let fitHist=[];
-        let raf=null;
+        const BASE_W = 200, BASE_H = 300;
+        let W = BASE_W, H = BASE_H;
+        let targetPx = null;
+        let polys = [], bestPolys = [], bestErr = Infinity;
+        let running = false, paused = false;
+        let gen = 0, impr = 0, mutRate = 1.0;
+        let rateT = { n: 0, t: performance.now() };
+        let fitHist = [];
+        let raf = null;
 
-        const cvWork=document.createElement('canvas');
-        const ctxWork=cvWork.getContext('2d');
-        const cvT=document.getElementById('cvt'),ctxT=cvT.getContext('2d');
-        const cvE=document.getElementById('cve'),ctxE=cvE.getContext('2d');
-        const cvD=document.getElementById('cvd'),ctxD=cvD.getContext('2d');
-        const crv=document.getElementById('crv'),crvCtx=crv.getContext('2d');
-        const DS=2; // display scale
+        // Multi-image support
+        let imageQueue = [];
+        let currentImageIndex = 0;
+        let autoSwitchTimer = null;
 
-        // ── Image loading ──────────────────────────────────────────────
-        function loadFile(f){
-            const r=new FileReader();
-            r.onload=e=>loadURL(e.target.result);
+        const cvWork = document.createElement('canvas');
+        const ctxWork = cvWork.getContext('2d');
+        const cvT = document.getElementById('cvt'), ctxT = cvT.getContext('2d');
+        const cvE = document.getElementById('cve'), ctxE = cvE.getContext('2d');
+        const cvD = document.getElementById('cvd'), ctxD = cvD.getContext('2d');
+        const crv = document.getElementById('crv'), crvCtx = crv.getContext('2d');
+        const DS = 2; // display scale
+
+        // ── Toggle evolved panel ───────────────────────────────────────
+        document.getElementById('toggleEvolvedCheckbox').addEventListener('change', function(e) {
+            const panel = document.getElementById('evolvedPanel');
+            panel.style.display = e.target.checked ? 'flex' : 'none';
+        });
+
+        // ── Multi-image loading ────────────────────────────────────────
+        function loadMultipleImages(files) {
+            const maxImages = 5;
+            const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+            
+            if (fileArray.length > maxImages) {
+                alert(`Maximum ${maxImages} images allowed. Only first ${maxImages} will be used.`);
+                fileArray.length = maxImages;
+            }
+
+            imageQueue = [];
+            
+            let loadedCount = 0;
+            fileArray.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imageQueue[index] = {
+                            img: img,
+                            name: file.name,
+                            data: null
+                        };
+                        loadedCount++;
+                        
+                        // Create thumbnail
+                        createThumbnail(img, index);
+                        
+                        if (loadedCount === fileArray.length) {
+                            // All images loaded
+                            document.getElementById('imageCountDisplay').textContent = 
+                                `${imageQueue.length}/5 images loaded`;
+                            document.getElementById('thumbnails').classList.remove('hidden');
+                            document.getElementById('multiSelector').style.display = 'flex';
+                            document.getElementById('totalImages').textContent = imageQueue.length;
+                            
+                            // Load first image
+                            loadImageFromQueue(0);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function createThumbnail(img, index) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 50;
+            canvas.height = 50;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 50, 50);
+            
+            const thumb = document.createElement('img');
+            thumb.src = canvas.toDataURL();
+            thumb.className = 'thumbnail';
+            thumb.dataset.index = index;
+            thumb.onclick = () => loadImageFromQueue(index);
+            
+            document.getElementById('thumbnails').appendChild(thumb);
+            updateActiveThumbnail(index);
+        }
+
+        function updateActiveThumbnail(index) {
+            document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+                if (i === index) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+            document.getElementById('currentImageIndex').textContent = index + 1;
+        }
+
+        function loadImageFromQueue(index) {
+            if (!imageQueue[index]) return;
+            
+            currentImageIndex = index;
+            const img = imageQueue[index].img;
+            
+            // Calculate dimensions
+            const ratio = img.height / img.width;
+            W = BASE_W;
+            H = Math.max(40, Math.round(W * ratio));
+            if (H > 360) { H = 360; W = Math.round(H / ratio); }
+            
+            cvWork.width = W;
+            cvWork.height = H;
+            ctxWork.drawImage(img, 0, 0, W, H);
+            targetPx = new Uint8ClampedArray(ctxWork.getImageData(0, 0, W, H).data);
+            
+            const dw = W * DS, dh = H * DS;
+            [cvT, cvE, cvD].forEach(c => { c.width = dw; c.height = dh; });
+            ctxT.drawImage(cvWork, 0, 0, dw, dh);
+            
+            document.getElementById('bstart').disabled = false;
+            document.getElementById('breset').disabled = false;
+            
+            updateActiveThumbnail(index);
+            
+            // Update navigation buttons
+            document.getElementById('prevImageBtn').disabled = index === 0;
+            document.getElementById('nextImageBtn').disabled = index === imageQueue.length - 1;
+            
+            doReset();
+            
+            showAlert(`Loaded: ${imageQueue[index].name}`);
+        }
+
+        function nextImage() {
+            if (currentImageIndex < imageQueue.length - 1) {
+                loadImageFromQueue(currentImageIndex + 1);
+            }
+        }
+
+        function prevImage() {
+            if (currentImageIndex > 0) {
+                loadImageFromQueue(currentImageIndex - 1);
+            }
+        }
+
+        // Auto-switch timer
+        function startAutoSwitch() {
+            if (autoSwitchTimer) clearInterval(autoSwitchTimer);
+            
+            const seconds = parseInt(document.getElementById('autoSwitchTime').value);
+            if (seconds === 0) return;
+            
+            autoSwitchTimer = setInterval(() => {
+                if (imageQueue.length > 0 && !running) {
+                    // Only switch if not evolving
+                    nextImage();
+                }
+            }, seconds * 1000);
+        }
+
+        document.getElementById('autoSwitchTime').addEventListener('change', startAutoSwitch);
+        document.getElementById('prevImageBtn').addEventListener('click', prevImage);
+        document.getElementById('nextImageBtn').addEventListener('click', nextImage);
+
+        // ── Original PIGMENT code continues ───────────────────────────
+        function loadFile(f) {
+            // Handle single file (legacy)
+            const r = new FileReader();
+            r.onload = e => loadURL(e.target.result);
             r.readAsDataURL(f);
         }
-        
-        function loadURL(url){
-            const img=new Image();
-            img.onload=()=>{
-                const ratio=img.height/img.width;
-                W=BASE_W; H=Math.max(40,Math.round(W*ratio));
-                if(H>360){H=360;W=Math.round(H/ratio);}
-                cvWork.width=W;cvWork.height=H;
-                ctxWork.drawImage(img,0,0,W,H);
-                targetPx=new Uint8ClampedArray(ctxWork.getImageData(0,0,W,H).data);
-                const dw=W*DS,dh=H*DS;
-                [cvT,cvE,cvD].forEach(c=>{c.width=dw;c.height=dh;});
-                ctxT.drawImage(cvWork,0,0,dw,dh);
-                document.getElementById('dropzone').style.display='none';
-                document.getElementById('bstart').disabled=false;
-                document.getElementById('breset').disabled=false;
+
+        function loadURL(url) {
+            const img = new Image();
+            img.onload = () => {
+                const ratio = img.height / img.width;
+                W = BASE_W;
+                H = Math.max(40, Math.round(W * ratio));
+                if (H > 360) { H = 360; W = Math.round(H / ratio); }
+                cvWork.width = W; cvWork.height = H;
+                ctxWork.drawImage(img, 0, 0, W, H);
+                targetPx = new Uint8ClampedArray(ctxWork.getImageData(0, 0, W, H).data);
+                const dw = W * DS, dh = H * DS;
+                [cvT, cvE, cvD].forEach(c => { c.width = dw; c.height = dh; });
+                ctxT.drawImage(cvWork, 0, 0, dw, dh);
+                document.getElementById('dropzone').style.display = 'none';
+                document.getElementById('bstart').disabled = false;
+                document.getElementById('breset').disabled = false;
                 doReset();
             };
-            img.src=url;
+            img.src = url;
         }
 
         // ── Genome ─────────────────────────────────────────────────────
-        function rPoly(){
-            const sz=W*(0.05+Math.random()*parseFloat(document.getElementById('rsize').value)*0.06);
-            const cx=Math.random()*W, cy=Math.random()*H;
-            const pts=[];
-            for(let i=0;i<3;i++){
-                const a=(i/3)*Math.PI*2+Math.random()*1.2;
-                const r=sz*(0.4+Math.random()*0.9);
-                pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);
+        function rPoly() {
+            const sz = W * (0.05 + Math.random() * parseFloat(document.getElementById('rsize').value) * 0.06);
+            const cx = Math.random() * W, cy = Math.random() * H;
+            const pts = [];
+            for (let i = 0; i < 3; i++) {
+                const a = (i / 3) * Math.PI * 2 + Math.random() * 1.2, r = sz * (0.4 + Math.random() * 0.9);
+                pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
             }
-            return{pts,r:Math.random()*255|0,g:Math.random()*255|0,b:Math.random()*255|0,a:(20+Math.random()*100)|0};
-        }
-        
-        function clp(x,y){
-            return[Math.max(-W*.1,Math.min(W*1.1,x)),Math.max(-H*.1,Math.min(H*1.1,y))];
-        }
-        
-        function gauss(s){
-            const u1=Math.random(),u2=Math.random();
-            return s*Math.sqrt(-2*Math.log(u1+1e-9))*Math.cos(2*Math.PI*u2);
+            return { pts, r: Math.random() * 255 | 0, g: Math.random() * 255 | 0, b: Math.random() * 255 | 0, a: (20 + Math.random() * 100) | 0 };
         }
 
-        function mutPoly(p,mr){
-            const q={pts:p.pts.map(pt=>[...pt]),r:p.r,g:p.g,b:p.b,a:p.a};
-            const c=Math.random();
-            if(c<0.28){
-                const vi=Math.random()*q.pts.length|0;
-                const s=W*0.05*mr;
-                q.pts[vi]=clp(q.pts[vi][0]+gauss(s),q.pts[vi][1]+gauss(s));
+        function clp(x, y) {
+            return [Math.max(-W * .1, Math.min(W * 1.1, x)), Math.max(-H * .1, Math.min(H * 1.1, y))];
+        }
+
+        function gauss(s) {
+            const u1 = Math.random(), u2 = Math.random();
+            return s * Math.sqrt(-2 * Math.log(u1 + 1e-9)) * Math.cos(2 * Math.PI * u2);
+        }
+
+        function mutPoly(p, mr) {
+            const q = { pts: p.pts.map(pt => [...pt]), r: p.r, g: p.g, b: p.b, a: p.a };
+            const c = Math.random();
+            if (c < 0.28) {
+                const vi = Math.random() * q.pts.length | 0;
+                const s = W * 0.05 * mr;
+                q.pts[vi] = clp(q.pts[vi][0] + gauss(s), q.pts[vi][1] + gauss(s));
+            } else if (c < 0.46) {
+                const dx = gauss(W * .04 * mr), dy = gauss(H * .04 * mr);
+                q.pts = q.pts.map(([x, y]) => clp(x + dx, y + dy));
+            } else if (c < 0.62) {
+                const ch = ['r', 'g', 'b'][Math.random() * 3 | 0];
+                q[ch] = Math.max(0, Math.min(255, q[ch] + gauss(18 * mr) | 0));
+            } else if (c < 0.78) {
+                q.a = Math.max(6, Math.min(165, q.a + gauss(10 * mr) | 0));
+            } else if (c < 0.90) {
+                const sc = 0.82 + Math.random() * 0.40,
+                    cx = q.pts.reduce((s, p) => s + p[0], 0) / q.pts.length,
+                    cy = q.pts.reduce((s, p) => s + p[1], 0) / q.pts.length;
+                q.pts = q.pts.map(([x, y]) => clp(cx + (x - cx) * sc, cy + (y - cy) * sc));
+            } else {
+                return rPoly();
             }
-            else if(c<0.46){
-                const dx=gauss(W*.04*mr),dy=gauss(H*.04*mr);
-                q.pts=q.pts.map(([x,y])=>clp(x+dx,y+dy));
-            }
-            else if(c<0.62){
-                const ch=['r','g','b'][Math.random()*3|0];
-                q[ch]=Math.max(0,Math.min(255,q[ch]+gauss(18*mr)|0));
-            }
-            else if(c<0.78){
-                q.a=Math.max(6,Math.min(165,q.a+gauss(10*mr)|0));
-            }
-            else if(c<0.90){
-                const sc=0.82+Math.random()*0.40;
-                const cx=q.pts.reduce((s,p)=>s+p[0],0)/q.pts.length;
-                const cy=q.pts.reduce((s,p)=>s+p[1],0)/q.pts.length;
-                q.pts=q.pts.map(([x,y])=>clp(cx+(x-cx)*sc,cy+(y-cy)*sc));
-            }
-            else return rPoly();
             return q;
         }
 
         // ── Render ─────────────────────────────────────────────────────
-        function render(ps,ctx,w,h){
-            ctx.clearRect(0,0,w,h);
-            ctx.fillStyle='#fff';
-            ctx.fillRect(0,0,w,h);
-            for(const p of ps){
+        function render(ps, ctx, w, h) {
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, w, h);
+            for (const p of ps) {
                 ctx.beginPath();
-                ctx.moveTo(p.pts[0][0],p.pts[0][1]);
-                for(let i=1;i<p.pts.length;i++)ctx.lineTo(p.pts[i][0],p.pts[i][1]);
+                ctx.moveTo(p.pts[0][0], p.pts[0][1]);
+                for (let i = 1; i < p.pts.length; i++) ctx.lineTo(p.pts[i][0], p.pts[i][1]);
                 ctx.closePath();
-                ctx.fillStyle=`rgba(${p.r},${p.g},${p.b},${p.a/255})`;
+                ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.a / 255})`;
                 ctx.fill();
             }
         }
 
         // ── Fitness ─────────────────────────────────────────────────────
-        function calcErr(id){
-            const d=id.data,t=targetPx;
-            let e=0;
-            for(let i=0;i<d.length;i+=4){
-                const dr=d[i]-t[i];
-                const dg=d[i+1]-t[i+1];
-                const db=d[i+2]-t[i+2];
-                e+=dr*dr+dg*dg+db*db;
+        function calcErr(id) {
+            const d = id.data, t = targetPx;
+            let e = 0;
+            for (let i = 0; i < d.length; i += 4) {
+                const dr = d[i] - t[i], dg = d[i + 1] - t[i + 1], db = d[i + 2] - t[i + 2];
+                e += dr * dr + dg * dg + db * db;
             }
             return e;
         }
-        
-        function fitPct(e){
-            return Math.max(0,100*(1-e/(255*255*3*W*H)));
+
+        function fitPct(e) {
+            return Math.max(0, 100 * (1 - e / (255 * 255 * 3 * W * H)));
         }
 
         // ── Evolution ──────────────────────────────────────────────────
-        function evolveStep(){
-            const pc=parseInt(document.getElementById('selpoly').value);
-            const sp=parseInt(document.getElementById('selspd').value);
-            for(let s=0;s<sp;s++){
-                const idx=Math.random()*polys.length|0;
-                const candidate=polys.slice();
-                candidate[idx]=mutPoly(polys[idx],mutRate);
-                cvWork.width=W;cvWork.height=H;
-                render(candidate,ctxWork,W,H);
-                const err=calcErr(ctxWork.getImageData(0,0,W,H));
-                if(err<bestErr){
-                    polys=candidate;
-                    bestPolys=candidate.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
-                    bestErr=err;
+        function evolveStep() {
+            const pc = parseInt(document.getElementById('selpoly').value);
+            const sp = parseInt(document.getElementById('selspd').value);
+            for (let s = 0; s < sp; s++) {
+                const idx = Math.random() * polys.length | 0;
+                const candidate = polys.slice();
+                candidate[idx] = mutPoly(polys[idx], mutRate);
+                cvWork.width = W;
+                cvWork.height = H;
+                render(candidate, ctxWork, W, H);
+                const err = calcErr(ctxWork.getImageData(0, 0, W, H));
+                if (err < bestErr) {
+                    polys = candidate;
+                    bestPolys = candidate.map(p => ({ ...p, pts: p.pts.map(pt => [...pt]) }));
+                    bestErr = err;
                     impr++;
-                    mutRate=Math.max(0.18,mutRate*0.9999);
-                }else{
-                    mutRate=Math.min(2.2,mutRate*1.00005);
+                    mutRate = Math.max(0.18, mutRate * 0.9999);
+                } else {
+                    mutRate = Math.min(2.2, mutRate * 1.00005);
                 }
                 gen++;
                 rateT.n++;
             }
-            if(polys.length<pc && gen%900===0){
+            if (polys.length < pc && gen % 900 === 0) {
                 polys.push(rPoly());
-                bestPolys=polys.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
+                bestPolys = polys.map(p => ({ ...p, pts: p.pts.map(pt => [...pt]) }));
             }
         }
 
-        let fc=0;
-        
-        function frame(){
-            if(!running||paused){raf=null;return;}
+        let fc = 0;
+
+        function frame() {
+            if (!running || paused) { raf = null; return; }
             evolveStep();
             fc++;
-            if(fc%4===0)updateDisplay();
-            raf=requestAnimationFrame(frame);
+            if (fc % 4 === 0) updateDisplay();
+            raf = requestAnimationFrame(frame);
         }
 
-        function updateDisplay(){
-            cvWork.width=W;cvWork.height=H;
-            render(bestPolys,ctxWork,W,H);
-            const dw=W*DS,dh=H*DS;
-            ctxE.drawImage(cvWork,0,0,dw,dh);
+        function updateDisplay() {
+            cvWork.width = W;
+            cvWork.height = H;
+            render(bestPolys, ctxWork, W, H);
+            const dw = W * DS, dh = H * DS;
+            ctxE.drawImage(cvWork, 0, 0, dw, dh);
             
             // Diff
-            const ev=ctxWork.getImageData(0,0,W,H);
-            const diff=ctxD.createImageData(W,H);
-            for(let i=0;i<ev.data.length;i+=4){
-                diff.data[i]=Math.min(255,Math.abs(ev.data[i]-targetPx[i])*4);
-                diff.data[i+1]=Math.min(255,Math.abs(ev.data[i+1]-targetPx[i+1])*4);
-                diff.data[i+2]=Math.min(255,Math.abs(ev.data[i+2]-targetPx[i+2])*4);
-                diff.data[i+3]=255;
+            const ev = ctxWork.getImageData(0, 0, W, H);
+            const diff = ctxD.createImageData(W, H);
+            for (let i = 0; i < ev.data.length; i += 4) {
+                diff.data[i] = Math.min(255, Math.abs(ev.data[i] - targetPx[i]) * 4);
+                diff.data[i + 1] = Math.min(255, Math.abs(ev.data[i + 1] - targetPx[i + 1]) * 4);
+                diff.data[i + 2] = Math.min(255, Math.abs(ev.data[i + 2] - targetPx[i + 2]) * 4);
+                diff.data[i + 3] = 255;
             }
-            const tmp=document.createElement('canvas');
-            tmp.width=W;
-            tmp.height=H;
-            tmp.getContext('2d').putImageData(diff,0,0);
-            ctxD.drawImage(tmp,0,0,dw,dh);
+            const tmp = document.createElement('canvas');
+            tmp.width = W;
+            tmp.height = H;
+            tmp.getContext('2d').putImageData(diff, 0, 0);
+            ctxD.drawImage(tmp, 0, 0, dw, dh);
             
             // Stats
-            const fp=fitPct(bestErr);
-            document.getElementById('sg').textContent=gen.toLocaleString();
-            document.getElementById('sf').textContent=fp.toFixed(2)+'%';
-            document.getElementById('si').textContent=impr.toLocaleString();
-            document.getElementById('sm').textContent=mutRate.toFixed(3);
+            const fp = fitPct(bestErr);
+            document.getElementById('sg').textContent = gen.toLocaleString();
+            document.getElementById('sf').textContent = fp.toFixed(2) + '%';
+            document.getElementById('si').textContent = impr.toLocaleString();
+            document.getElementById('sm').textContent = mutRate.toFixed(3);
             
-            const now=performance.now(),dt=(now-rateT.t)/1000;
-            if(dt>0.5){
-                document.getElementById('sr').textContent=(rateT.n/dt|0)+'/s';
-                rateT={n:0,t:now};
+            const now = performance.now(), dt = (now - rateT.t) / 1000;
+            if (dt > 0.5) {
+                document.getElementById('sr').textContent = (rateT.n / dt | 0) + '/s';
+                rateT = { n: 0, t: now };
             }
             
             fitHist.push(fp);
-            if(fitHist.length>300)fitHist.shift();
+            if (fitHist.length > 300) fitHist.shift();
             drawCurve();
             
-            if(impr>0&&impr%3000===0)document.getElementById('pg-out').value=genPG();
+            if (impr > 0 && impr % 3000 === 0) document.getElementById('pg-out').value = genPG();
         }
 
-        function drawCurve(){
-            const cw=crv.width,ch=crv.height;
-            crvCtx.clearRect(0,0,cw,ch);
-            if(fitHist.length<2)return;
-            const mx=Math.max(...fitHist),mn=Math.min(...fitHist),rng=Math.max(mx-mn,0.5);
-            crvCtx.strokeStyle='#c0a030';
-            crvCtx.lineWidth=1.5;
+        function drawCurve() {
+            const cw = crv.width, ch = crv.height;
+            crvCtx.clearRect(0, 0, cw, ch);
+            if (fitHist.length < 2) return;
+            const mx = Math.max(...fitHist), mn = Math.min(...fitHist), rng = Math.max(mx - mn, 0.5);
+            crvCtx.strokeStyle = '#c0a030';
+            crvCtx.lineWidth = 1.5;
             crvCtx.beginPath();
-            for(let i=0;i<fitHist.length;i++){
-                const x=(i/(fitHist.length-1))*cw;
-                const y=ch-((fitHist[i]-mn)/rng)*(ch-4)-2;
-                i===0?crvCtx.moveTo(x,y):crvCtx.lineTo(x,y);
+            for (let i = 0; i < fitHist.length; i++) {
+                const x = (i / (fitHist.length - 1)) * cw,
+                    y = ch - ((fitHist[i] - mn) / rng) * (ch - 4) - 2;
+                i === 0 ? crvCtx.moveTo(x, y) : crvCtx.lineTo(x, y);
             }
             crvCtx.stroke();
-            crvCtx.fillStyle='#3a3828';
-            crvCtx.font='10px Courier New';
-            crvCtx.fillText(mx.toFixed(1)+'%',4,11);
-            crvCtx.fillText(mn.toFixed(1)+'%',4,ch-3);
+            crvCtx.fillStyle = '#3a3828';
+            crvCtx.font = '10px Courier New';
+            crvCtx.fillText(mx.toFixed(1) + '%', 4, 11);
+            crvCtx.fillText(mn.toFixed(1) + '%', 4, ch - 3);
         }
 
         // ── Controls ───────────────────────────────────────────────────
-        function doStart(){
-            if(!targetPx)return;
-            running=true;
-            paused=false;
-            document.getElementById('bstart').disabled=true;
-            document.getElementById('bpause').disabled=false;
-            if(!raf)raf=requestAnimationFrame(frame);
-        }
-        
-        function doPause(){
-            paused=!paused;
-            document.getElementById('bpause').textContent=paused?'▶ Resume':'⏸ Pause';
-            if(!paused&&!raf)raf=requestAnimationFrame(frame);
-        }
-        
-        function doReset(){
-            if(raf){
-                cancelAnimationFrame(raf);
-                raf=null;
+        function doStart() {
+            if (!targetPx) return;
+            running = true;
+            paused = false;
+            document.getElementById('bstart').disabled = true;
+            document.getElementById('bpause').disabled = false;
+            if (!raf) raf = requestAnimationFrame(frame);
+            
+            // Stop auto-switch when evolving
+            if (autoSwitchTimer) {
+                clearInterval(autoSwitchTimer);
+                autoSwitchTimer = null;
             }
-            running=false;
-            paused=false;
+        }
+
+        function doPause() {
+            paused = !paused;
+            document.getElementById('bpause').textContent = paused ? '▶ Resume' : '⏸ Pause';
+            if (!paused && !raf) raf = requestAnimationFrame(frame);
+        }
+
+        function doReset() {
+            if (raf) {
+                cancelAnimationFrame(raf);
+                raf = null;
+            }
+            running = false;
+            paused = false;
             
-            const pc=parseInt(document.getElementById('selpoly').value);
-            polys=Array.from({length:pc},()=>rPoly());
-            bestPolys=polys.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
+            const pc = parseInt(document.getElementById('selpoly').value);
+            polys = Array.from({ length: pc }, () => rPoly());
+            bestPolys = polys.map(p => ({ ...p, pts: p.pts.map(pt => [...pt]) }));
             
-            cvWork.width=W;
-            cvWork.height=H;
-            render(bestPolys,ctxWork,W,H);
-            bestErr=calcErr(ctxWork.getImageData(0,0,W,H));
+            cvWork.width = W;
+            cvWork.height = H;
+            render(bestPolys, ctxWork, W, H);
+            bestErr = calcErr(ctxWork.getImageData(0, 0, W, H));
             
-            gen=0;
-            impr=0;
-            mutRate=1.0;
-            fitHist=[];
-            rateT={n:0,t:performance.now()};
+            gen = 0;
+            impr = 0;
+            mutRate = 1.0;
+            fitHist = [];
+            rateT = { n: 0, t: performance.now() };
             
-            document.getElementById('bstart').disabled=false;
-            document.getElementById('bpause').disabled=true;
-            document.getElementById('bpause').textContent='⏸ Pause';
-            document.getElementById('pg-out').value='';
+            document.getElementById('bstart').disabled = false;
+            document.getElementById('bpause').disabled = true;
+            document.getElementById('bpause').textContent = '⏸ Pause';
+            document.getElementById('pg-out').value = '';
             
             updateDisplay();
         }
 
         // ── Genome export ──────────────────────────────────────────────
-        function genPG(){
-            const fp=fitPct(bestErr);
-            const lines=[
+        function genPG() {
+            const fp = fitPct(bestErr);
+            const lines = [
                 `-- PIGMENT v3 Evolutionary Genome`,
                 `-- Gen: ${gen.toLocaleString()}  Fitness: ${fp.toFixed(2)}%  Polygons: ${bestPolys.length}`,
-                `-- Algorithm: Roger Alsing hill-climbing mutation`,``,
-                `canvas { format: portrait  title: "Evolved Painting"  artist: "PIGMENT v3 Evolutionary Engine"  date: "${new Date().getFullYear()}" }`,``,
+                `-- Algorithm: Roger Alsing hill-climbing mutation`, ``,
+                `canvas { format: portrait  title: "Evolved Painting"  artist: "PIGMENT v3 Evolutionary Engine"  date: "${new Date().getFullYear()}" }`, ``,
                 `palette {`,
             ];
-            const step=Math.max(1,bestPolys.length/16|0);
-            const palNames=[];
-            for(let i=0;i<bestPolys.length;i+=step){
-                const p=bestPolys[i];
-                const h=p.r.toString(16).padStart(2,'0')+p.g.toString(16).padStart(2,'0')+p.b.toString(16).padStart(2,'0');
-                const nm=`p${palNames.length}`;
+            const step = Math.max(1, bestPolys.length / 16 | 0);
+            const palNames = [];
+            for (let i = 0; i < bestPolys.length; i += step) {
+                const p = bestPolys[i];
+                const h = p.r.toString(16).padStart(2, '0') + p.g.toString(16).padStart(2, '0') + p.b.toString(16).padStart(2, '0');
+                const nm = `p${palNames.length}`;
                 palNames.push(nm);
                 lines.push(`  ${nm.padEnd(8)}: #${h}`);
             }
-            lines.push(`}`,'',`layer evolved {`);
-            for(let i=0;i<bestPolys.length;i++){
-                const p=bestPolys[i];
-                const h=p.r.toString(16).padStart(2,'0')+p.g.toString(16).padStart(2,'0')+p.b.toString(16).padStart(2,'0');
-                const op=(p.a/255).toFixed(3);
-                const pts=p.pts.map(([x,y])=>`${(x/W).toFixed(3)},${(y/H).toFixed(3)}`).join(' ');
+            lines.push(`}`, '', `layer evolved {`);
+            for (let i = 0; i < bestPolys.length; i++) {
+                const p = bestPolys[i];
+                const h = p.r.toString(16).padStart(2, '0') + p.g.toString(16).padStart(2, '0') + p.b.toString(16).padStart(2, '0');
+                const op = (p.a / 255).toFixed(3);
+                const pts = p.pts.map(([x, y]) => `${(x / W).toFixed(3)},${(y / H).toFixed(3)}`).join(' ');
                 lines.push(`  -- [${pts}]  α=${op}`);
                 lines.push(`  zone poly-${i} { color: #${h}  opacity: ${op} }`);
             }
             lines.push(`}`);
             return lines.join('\n');
         }
-        
-        function doExport(){
-            const t=genPG();
-            const a=document.createElement('a');
-            a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
-            a.download=`evolved_gen${gen}.pg`;
+
+        function doExport() {
+            const t = genPG();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([t], { type: 'text/plain' }));
+            a.download = `evolved_gen${gen}.pg`;
             a.click();
-            document.getElementById('pg-out').value=t;
+            document.getElementById('pg-out').value = t;
         }
-        
-        function doCopy(){
-            navigator.clipboard.writeText(genPG()).catch(()=>{});
-            document.getElementById('pg-out').value=genPG();
+
+        function doCopy() {
+            navigator.clipboard.writeText(genPG()).catch(() => { });
+            document.getElementById('pg-out').value = genPG();
         }
-        
-        function doSaveImg(){
-            cvWork.width=W*4;
-            cvWork.height=H*4;
-            render(bestPolys,ctxWork,W*4,H*4);
-            const a=document.createElement('a');
-            a.href=cvWork.toDataURL('image/png');
-            a.download=`evolved_gen${gen}.png`;
+
+        function doSaveImg() {
+            cvWork.width = W * 4;
+            cvWork.height = H * 4;
+            render(bestPolys, ctxWork, W * 4, H * 4);
+            const a = document.createElement('a');
+            a.href = cvWork.toDataURL('image/png');
+            a.download = `evolved_gen${gen}.png`;
             a.click();
         }
 
         // ── File drop ──────────────────────────────────────────────────
-        document.getElementById('fi').onchange=e=>{if(e.target.files[0])loadFile(e.target.files[0]);};
-        
-        const dz=document.getElementById('dropzone');
-        dz.addEventListener('dragover',e=>{
+        document.getElementById('fi').onchange = e => {
+            if (e.target.files.length > 0) {
+                if (e.target.files.length === 1) {
+                    // Single file - use original method
+                    loadFile(e.target.files[0]);
+                } else {
+                    // Multiple files - use multi-image loader
+                    loadMultipleImages(e.target.files);
+                }
+            }
+        };
+
+        const dz = document.getElementById('dropzone');
+        dz.addEventListener('dragover', e => {
             e.preventDefault();
             dz.classList.add('over');
         });
-        
-        dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
-        
-        dz.addEventListener('drop',e=>{
+
+        dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+
+        dz.addEventListener('drop', e => {
             e.preventDefault();
             dz.classList.remove('over');
-            const f=e.dataTransfer.files[0];
-            if(f&&f.type.startsWith('image/'))loadFile(f);
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                if (files.length === 1 && files[0].type.startsWith('image/')) {
+                    loadFile(files[0]);
+                } else if (files.length > 1) {
+                    // Check if all are images
+                    const allImages = Array.from(files).every(f => f.type.startsWith('image/'));
+                    if (allImages) {
+                        loadMultipleImages(files);
+                    } else {
+                        alert('Please drop only image files');
+                    }
+                }
+            }
         });
 
-        // Curve resize
-        function rCrv(){
-            crv.width=document.getElementById('crv').parentElement.clientWidth||460;
-            crv.height=72;
+        // PG file drop
+        const pgdz = document.getElementById('pgLoader');
+        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
+        pgdz.addEventListener('dragover', e => {
+            e.preventDefault();
+            pgdz.classList.add('over');
+        });
+        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
+        pgdz.addEventListener('drop', e => {
+            e.preventDefault();
+            pgdz.classList.remove('over');
+            const f = e.dataTransfer.files[0];
+            if (f && f.name.endsWith('.pg')) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        parsePG(e.target.result);
+                        showAlert('✅ .pg genome loaded!');
+                    } catch (err) {
+                        showAlert('❌ Failed to parse .pg file', 'error');
+                    }
+                };
+                reader.readAsText(f);
+            }
+        });
+
+        document.getElementById('pgFile').onchange = e => {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        parsePG(e.target.result);
+                        showAlert('✅ .pg genome loaded!');
+                    } catch (err) {
+                        showAlert('❌ Failed to parse .pg file', 'error');
+                    }
+                };
+                reader.readAsText(e.target.files[0]);
+            }
+        };
+
+        // Simple PG parser (minimal version)
+        function parsePG(content) {
+            // Extract polygons
+            const polyBlocks = content.match(/poly-\d+\s*{[^}]*}/g);
+            if (polyBlocks) {
+                const newPolys = [];
+                polyBlocks.forEach(block => {
+                    const pointsMatch = block.match(/points:\s*([\d.,\-\s]+)/);
+                    const colorMatch = block.match(/color:\s*rgba?\(([^)]+)\)/);
+                    
+                    if (pointsMatch && colorMatch) {
+                        const pts = pointsMatch[1].trim().split(/\s+/).map(p => 
+                            p.split(',').map(Number)
+                        );
+                        const rgba = colorMatch[1].split(',').map(Number);
+                        
+                        newPolys.push({
+                            pts: pts,
+                            r: Math.round(rgba[0] || 0),
+                            g: Math.round(rgba[1] || 0),
+                            b: Math.round(rgba[2] || 0),
+                            a: Math.round((rgba[3] || 1) * 255)
+                        });
+                    }
+                });
+                
+                if (newPolys.length > 0) {
+                    bestPolys = newPolys;
+                    bestErr = calcErr(renderToData(bestPolys));
+                    updateDisplay();
+                    showAlert(`Loaded ${newPolys.length} polygons from .pg`);
+                }
+            }
         }
-        
+
+        function renderToData(ps) {
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+            render(ps, ctx, W, H);
+            return ctx.getImageData(0, 0, W, H);
+        }
+
+        function showAlert(msg, type = 'info') {
+            const alertArea = document.getElementById('alert-area');
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            alertArea.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Curve resize
+        function rCrv() {
+            crv.width = document.getElementById('crv').parentElement.clientWidth || 460;
+            crv.height = 72;
+            drawCurve();
+        }
         rCrv();
-        window.addEventListener('resize',rCrv);
+        window.addEventListener('resize', rCrv);
     </script>
 </body>
 </html>
