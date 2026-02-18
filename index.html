@@ -3,86 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PIGMENT — v5 AI Evolutionary Painter</title>
+    <title>PIGMENT — Evolutionary Painter</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:#080806;color:#c0b898;font-family:'Courier New',monospace;
              min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px;gap:12px}
-        h1{font-family:Georgia,serif;font-style:italic;font-size:clamp(1.2rem, 5vw, 1.55rem);color:#e8d898;text-align:center}
-        .sub{font-size:clamp(0.6rem, 3vw, 0.7rem);color:#44402e;text-align:center}
+        h1{font-family:Georgia,serif;font-style:italic;font-size:clamp(1.2rem, 5vw, 1.55rem);color:#e8d898;letter-spacing:.04em;text-align:center}
+        .sub{font-size:clamp(0.6rem, 3vw, 0.7rem);color:#44402e;letter-spacing:.08em;text-align:center}
         
-        .dashboard-link{position:fixed;top:20px;right:20px;background:#141210;border:1px solid #c8a838;
-          color:#e8d080;padding:8px 16px;border-radius:4px;text-decoration:none;z-index:1000}
-        .dashboard-link:hover{background:#242010}
-        
-        .training-badge{position:fixed;bottom:20px;right:20px;background:#1e2a1a;border:1px solid #4a8a4a;
-          color:#8aca8a;padding:8px 16px;border-radius:20px;font-size:0.8rem;z-index:1000;cursor:pointer}
-        
-        #dropzone{border:2px dashed #3a3828;border-radius:8px;padding:20px;text-align:center;
-          cursor:pointer;color:#5a5440;transition:all .2s;width:100%;max-width:600px}
+        /* Multi-upload area */
+        .upload-container{width:100%;max-width:800px;display:flex;flex-direction:column;gap:8px}
+        #dropzone{border:2px dashed #3a3828;border-radius:8px;padding:20px 15px;text-align:center;
+          cursor:pointer;color:#5a5440;font-size:clamp(0.7rem, 4vw, 0.83rem);transition:all .2s}
         #dropzone.over,#dropzone:hover{border-color:#b89838;color:#d8c878;background:rgba(184,152,56,.04)}
+        .image-queue{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;min-height:50px}
+        .queue-item{position:relative;width:60px;height:60px;border:1px solid #3a3828;border-radius:4px;overflow:hidden}
+        .queue-item img{width:100%;height:100%;object-fit:cover}
+        .queue-item .remove{position:absolute;top:-5px;right:-5px;width:18px;height:18px;
+          background:#3a1e1e;border:1px solid #b84a4a;border-radius:50%;color:#d88;
+          display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
         
-        .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin:10px 0}
+        .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%}
         button{background:#141210;border:1px solid #3a3828;color:#b8a878;padding:6px 12px;
-          border-radius:4px;cursor:pointer;font-family:inherit;font-size:clamp(0.7rem, 3vw, 0.8rem)}
+          border-radius:4px;cursor:pointer;font-family:inherit;font-size:clamp(0.7rem, 3vw, 0.8rem);letter-spacing:.04em;transition:all .15s}
         button:hover{background:#1e1c14;border-color:#7a6830;color:#d8c878}
+        button:disabled{opacity:.35;cursor:not-allowed}
         button.go{background:#1a1808;border-color:#c8a838;color:#e8d080}
-        button.ai-suggest{background:#1a2a1a;border-color:#4a9a4a;color:#8ada8a}
+        button.go:hover{background:#242010}
+        button.toggle{background:#1a1a14;border-color:#5a5240}
         
-        .panels{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-        .panel{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:120px}
-        .plabel{font-size:clamp(0.6rem, 2.5vw, 0.65rem);color:#3a3828;text-transform:uppercase}
-        canvas.view{width:100%;max-width:200px;height:auto;border:1px solid #1e1c14;background:#fff}
+        select,input[type=range]{background:#141210;border:1px solid #3a3828;color:#b8a878;
+          padding:5px 6px;border-radius:4px;font-family:inherit;font-size:clamp(0.7rem, 3vw, 0.78rem);max-width:120px}
+        label{font-size:clamp(0.7rem, 3vw, 0.76rem);color:#5a5440;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
         
-        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:600px;
-          font-size:clamp(0.7rem, 3vw, 0.76rem);color:#7a7460;text-align:center}
+        /* Canvas panel */
+        .panels{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:100%}
+        .panel{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1 1 auto;min-width:120px}
+        .plabel{font-size:clamp(0.6rem, 2.5vw, 0.65rem);color:#3a3828;letter-spacing:.09em;text-transform:uppercase}
+        canvas.view{width:100%;max-width:200px;height:auto;border:1px solid #1e1c14;image-rendering:pixelated;image-rendering:crisp-edges}
+        
+        /* Stats grid */
+        .stats{display:grid;grid-template-columns:repeat(auto-fit, minmax(100px, 1fr));gap:10px;
+          width:100%;max-width:600px;font-size:clamp(0.7rem, 3vw, 0.76rem);color:#7a7460;text-align:center}
         .sv{font-size:clamp(1rem, 4vw, 1.28rem);color:#c0b080;font-family:Georgia,serif}
+        .sl{font-size:clamp(0.6rem, 2.5vw, 0.67rem);color:#3a3828;letter-spacing:.06em}
         
-        .ai-panel{background:#0c0c0a;border:1px solid #2a4a2a;border-radius:8px;padding:12px;width:100%;max-width:600px;display:none}
-        .ai-header{color:#8ada8a;font-size:0.9rem;margin-bottom:8px;display:flex;justify-content:space-between}
-        .ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-        .ai-param{background:#0a0a08;border:1px solid #2a3a2a;padding:8px;border-radius:4px}
-        .ai-param label{color:#6a8a6a;font-size:0.7rem;display:block}
-        .ai-param value{color:#c0e0c0;font-size:1rem;font-weight:bold}
-        
-        #crv{background:#0a0a08;border:1px solid #1e1c14;border-radius:3px;width:100%;max-width:600px;height:72px}
+        #crv{background:#0a0a08;border:1px solid #1e1c14;border-radius:3px;width:100%;max-width:500px;height:72px}
         
         .expbox{background:#0c0c0a;border:1px solid #1e1c14;border-radius:6px;padding:12px;width:100%;max-width:600px}
+        .expbox h3{font-family:Georgia,serif;font-size:clamp(0.8rem, 4vw, 0.85rem);color:#7a6840;margin-bottom:8px}
         #pg-out{width:100%;height:120px;background:#080806;border:1px solid #181612;color:#908860;
           font-family:'Courier New',monospace;font-size:clamp(0.6rem, 2.5vw, 0.7rem);padding:8px;resize:vertical}
         .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
         
-        .supabase-status{position:fixed;top:20px;left:20px;background:#141210;border:1px solid #3a5a3a;
-          color:#8ada8a;padding:4px 8px;border-radius:4px;font-size:0.7rem;z-index:1000}
+        .status-badge{background:#1e2a1e;border:1px solid #4a8a4a;color:#8aca8a;padding:4px 12px;border-radius:16px;font-size:0.8rem}
+        
+        /* Hide evolved toggle */
+        .evolved-hidden #cve{display:none}
+        .evolved-hidden .panel:nth-child(2) .plabel{opacity:0.3}
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="supabase-status" id="supabaseStatus">🔄 Connecting to Supabase...</div>
-    <a href="#" class="dashboard-link" onclick="showDashboard()">📊 AI DASHBOARD</a>
-    <div class="training-badge" id="trainingBadge" onclick="syncWithSupabase()">🤖 Local: 0 | Cloud: 0</div>
+    <h1>PIGMENT — Evolutionary Painter</h1>
+    <div class="sub">MULTI-IMAGE · V5 SYNTAX · POLYGON EVOLUTION</div>
 
-    <h1>PIGMENT — v5 AI Evolutionary Painter</h1>
-    <div class="sub">POLYGON EVOLUTION · V5 SYNTAX · SUPABASE ML</div>
-
-    <div id="dropzone" onclick="document.getElementById('fi').click()">
-        <div style="font-size:1.6em;margin-bottom:6px">🎨</div>
-        <div>Drop target image or click to choose</div>
+    <div class="upload-container">
+        <div id="dropzone" onclick="document.getElementById('fi').click()">
+            <div style="font-size:1.6em;margin-bottom:6px">🎨</div>
+            <div>Drop up to 5 images or click to choose</div>
+            <div style="font-size:0.7rem;margin-top:4px;color:#5a5440">(Target images for evolution)</div>
+        </div>
+        <input type="file" id="fi" accept="image/*" multiple style="display:none">
+        <div class="image-queue" id="imageQueue"></div>
     </div>
-    <input type="file" id="fi" accept="image/*" style="display:none">
 
     <div class="controls">
         <button class="go" id="bstart" disabled onclick="doStart()">▶ Start</button>
         <button id="bpause" disabled onclick="doPause()">⏸ Pause</button>
         <button id="breset" disabled onclick="doReset()">↺ Reset</button>
-        <button class="ai-suggest" id="bAISuggest" onclick="getAISuggestion()" disabled>🤖 AI Suggest</button>
+        <button class="toggle" id="bToggleEvolved" onclick="toggleEvolved()">👁 Hide Evolved</button>
         <span style="width:1px;height:22px;background:#1e1c14"></span>
         <label>Polygons
-            <select id="selpoly"><option value="50">50</option><option value="100" selected>100</option></select>
+            <select id="selpoly"><option value="50" selected>50</option><option value="100">100</option><option value="150">150</option><option value="200">200</option></select>
         </label>
         <label>Speed
-            <select id="selspd"><option value="10">Slow</option><option value="30" selected>Normal</option></select>
+            <select id="selspd"><option value="10">Slow</option><option value="30" selected>Normal</option><option value="80">Fast</option><option value="200">Max</option></select>
         </label>
+        <label>Size <input type="range" id="rsize" min="2" max="9" step=".5" value="4" style="width:70px"></label>
     </div>
 
     <div class="panels">
@@ -92,262 +99,366 @@
     </div>
 
     <div class="stats">
-        <div><div class="sv" id="sg">0</div><div>Generation</div></div>
-        <div><div class="sv" id="sf">0%</div><div>Fitness</div></div>
-        <div><div class="sv" id="si">0</div><div>Improvements</div></div>
-        <div><div class="sv" id="st">0</div><div>Local</div></div>
-        <div><div class="sv" id="sc">0</div><div>Cloud</div></div>
-        <div><div class="sv" id="sq">0</div><div>Q-States</div></div>
-    </div>
-
-    <div class="ai-panel" id="aiPanel">
-        <div class="ai-header">
-            <span>🤖 AI RECOMMENDED PARAMETERS</span>
-            <span style="font-size:0.7rem" id="aiConfidence">confidence: 0%</span>
-        </div>
-        <div class="ai-grid" id="aiParams"></div>
+        <div><div class="sv" id="sg">0</div><div class="sl">Generation</div></div>
+        <div><div class="sv" id="sf">0.00%</div><div class="sl">Fitness</div></div>
+        <div><div class="sv" id="si">0</div><div class="sl">Improvements</div></div>
+        <div><div class="sv" id="sr">0/s</div><div class="sl">Mut/sec</div></div>
+        <div><div class="sv" id="sm">1.00</div><div class="sl">Mut rate</div></div>
+        <div><div class="sv" id="simg">0/0</div><div class="sl">Image</div></div>
     </div>
 
     <canvas id="crv"></canvas>
 
     <div class="expbox">
         <h3>📄 PIGMENT v5 Genome Export</h3>
-        <textarea id="pg-out" readonly placeholder="Evolve first — genome will appear..."></textarea>
+        <textarea id="pg-out" readonly placeholder="Evolve first — genome will appear as PIGMENT v5 source..."></textarea>
         <div class="row">
             <button onclick="doExport()">↓ Export .pg</button>
             <button onclick="doCopy()">📋 Copy</button>
-            <button onclick="exportTrainingData()">📊 Export JSON</button>
-            <button onclick="syncWithSupabase()">🔄 Sync Cloud</button>
+            <button onclick="doSaveImg()">🖼 Save PNG</button>
+            <button onclick="document.getElementById('pg-out').value=genPG()">🔄 Refresh</button>
         </div>
+        <div style="margin-top:8px;font-size:0.7rem;color:#5a5440">✅ v5 syntax — canvas → palette → layer → zones</div>
     </div>
 
     <script>
-        // ========== SUPABASE CONFIG ==========
-        const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
+        // ── Constants ──────────────────────────────────────────────────
+        const BASE_W=200, BASE_H=300;
+        let W=BASE_W, H=BASE_H;
+        let images=[], currentImageIndex=0;
+        let targetPx=null;
+        let polys=[], bestPolys=[], bestErr=Infinity;
+        let running=false, paused=false;
+        let gen=0, impr=0, mutRate=1.0;
+        let rateT={n:0,t:performance.now()};
+        let fitHist=[];
+        let raf=null;
+
+        const cvWork=document.createElement('canvas');
+        const ctxWork=cvWork.getContext('2d');
+        const cvT=document.getElementById('cvt'),ctxT=cvT.getContext('2d');
+        const cvE=document.getElementById('cve'),ctxE=cvE.getContext('2d');
+        const cvD=document.getElementById('cvd'),ctxD=cvD.getContext('2d');
+        const crv=document.getElementById('crv'),crvCtx=crv.getContext('2d');
+        const DS=2; // display scale
+
+        // ── Multi-image management ──────────────────────────────────────
+        function updateImageQueue() {
+            const queue=document.getElementById('imageQueue');
+            queue.innerHTML='';
+            images.forEach((imgData,idx)=>{
+                const item=document.createElement('div');
+                item.className='queue-item';
+                item.innerHTML=`<img src="${imgData.url}"><div class="remove" onclick="removeImage(${idx})">✕</div>`;
+                item.onclick=()=>switchToImage(idx);
+                if(idx===currentImageIndex)item.style.border='2px solid #c8a838';
+                queue.appendChild(item);
+            });
+            document.getElementById('simg').textContent=images.length?`${currentImageIndex+1}/${images.length}`:'0/0';
+        }
         
-        const supabase = window.supabase?.createClient 
-            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-            : null;
-
-        if (supabase) {
-            document.getElementById('supabaseStatus').innerHTML = '✅ Connected to Supabase';
+        function removeImage(idx) {
+            images.splice(idx,1);
+            if(currentImageIndex>=idx)currentImageIndex=Math.max(0,currentImageIndex-1);
+            if(images.length)switchToImage(currentImageIndex);
+            else {
+                targetPx=null;
+                document.getElementById('dropzone').style.display='block';
+                document.getElementById('bstart').disabled=true;
+                document.getElementById('breset').disabled=true;
+            }
+            updateImageQueue();
+        }
+        
+        function switchToImage(idx) {
+            if(idx<0||idx>=images.length)return;
+            currentImageIndex=idx;
+            loadURL(images[idx].url);
+            updateImageQueue();
         }
 
-        // ========== V5 SYNTAX CONSTANTS ==========
-        const V5_KEYWORDS = {
-            canvas: true, palette: true, layer: true, zone: true,
-            feature: true, sfumato: true, craquelure: true,
-            illuminate: true, sss: true, from: true, in: true,
-            at: true, with: true, contains: true
-        };
-
-        // ========== AI TRAINER ==========
-        class AITrainer {
-            constructor() {
-                this.trainingData = [];
-                this.cloudCount = 0;
-                this.model = null;
-                this.loadFromStorage();
-                this.loadCloudCount();
-            }
-            
-            loadFromStorage() {
-                try {
-                    const saved = localStorage.getItem('pigment_v5_training');
-                    if (saved) {
-                        this.trainingData = JSON.parse(saved);
-                        this.updateBadge();
-                        if (this.trainingData.length >= 10) this.trainModel();
-                    }
-                } catch(e) { console.log('Storage error'); }
-            }
-            
-            async loadCloudCount() {
-                if (!supabase) return;
-                try {
-                    const { count } = await supabase
-                        .from('training_data')
-                        .select('*', { count: 'exact', head: true });
-                    this.cloudCount = count || 0;
-                    this.updateBadge();
-                } catch (e) {}
-            }
-            
-            async addExample(genome, fitness, params) {
-                const example = {
-                    id: this.trainingData.length,
-                    timestamp: Date.now(),
-                    generation: gen,
-                    fitness: fitness,
-                    genome: genome,
-                    parameters: params || this.extractParams(genome),
-                    session_id: this.getSessionId()
+        // ── Image loading ──────────────────────────────────────────────
+        function loadFiles(files){
+            Array.from(files).slice(0,5).forEach(file=>{
+                if(!file.type.startsWith('image/'))return;
+                const reader=new FileReader();
+                reader.onload=e=>{
+                    images.push({url:e.target.result,name:file.name});
+                    if(images.length===1)switchToImage(0);
+                    updateImageQueue();
                 };
-                
-                this.trainingData.push(example);
-                if (this.trainingData.length > 1000) 
-                    this.trainingData = this.trainingData.slice(-1000);
-                
-                this.save();
-                this.updateBadge();
-                
-                if (supabase && this.trainingData.length % 5 === 0) {
-                    await this.syncToSupabase([example]);
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function loadURL(url){
+            const img=new Image();
+            img.onload=()=>{
+                const ratio=img.height/img.width;
+                W=BASE_W; H=Math.max(40,Math.round(W*ratio));
+                if(H>360){H=360;W=Math.round(H/ratio);}
+                cvWork.width=W;cvWork.height=H;
+                ctxWork.drawImage(img,0,0,W,H);
+                targetPx=new Uint8ClampedArray(ctxWork.getImageData(0,0,W,H).data);
+                const dw=W*DS,dh=H*DS;
+                [cvT,cvE,cvD].forEach(c=>{c.width=dw;c.height=dh;});
+                ctxT.drawImage(cvWork,0,0,dw,dh);
+                document.getElementById('dropzone').style.display='none';
+                document.getElementById('bstart').disabled=false;
+                document.getElementById('breset').disabled=false;
+                doReset();
+            };
+            img.src=url;
+        }
+
+        // ── Genome ─────────────────────────────────────────────────────
+        function rPoly(){
+            const sz=W*(0.05+Math.random()*parseFloat(document.getElementById('rsize').value)*0.06);
+            const cx=Math.random()*W, cy=Math.random()*H;
+            const pts=[];
+            for(let i=0;i<3;i++){
+                const a=(i/3)*Math.PI*2+Math.random()*1.2;
+                const r=sz*(0.4+Math.random()*0.9);
+                pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);
+            }
+            return{pts,r:Math.random()*255|0,g:Math.random()*255|0,b:Math.random()*255|0,a:(20+Math.random()*100)|0};
+        }
+        
+        function clp(x,y){
+            return[Math.max(-W*.1,Math.min(W*1.1,x)),Math.max(-H*.1,Math.min(H*1.1,y))];
+        }
+        
+        function gauss(s){
+            const u1=Math.random(),u2=Math.random();
+            return s*Math.sqrt(-2*Math.log(u1+1e-9))*Math.cos(2*Math.PI*u2);
+        }
+
+        function mutPoly(p,mr){
+            const q={pts:p.pts.map(pt=>[...pt]),r:p.r,g:p.g,b:p.b,a:p.a};
+            const c=Math.random();
+            if(c<0.28){
+                const vi=Math.random()*q.pts.length|0;
+                const s=W*0.05*mr;
+                q.pts[vi]=clp(q.pts[vi][0]+gauss(s),q.pts[vi][1]+gauss(s));
+            }
+            else if(c<0.46){
+                const dx=gauss(W*.04*mr),dy=gauss(H*.04*mr);
+                q.pts=q.pts.map(([x,y])=>clp(x+dx,y+dy));
+            }
+            else if(c<0.62){
+                const ch=['r','g','b'][Math.random()*3|0];
+                q[ch]=Math.max(0,Math.min(255,q[ch]+gauss(18*mr)|0));
+            }
+            else if(c<0.78){
+                q.a=Math.max(6,Math.min(165,q.a+gauss(10*mr)|0));
+            }
+            else if(c<0.90){
+                const sc=0.82+Math.random()*0.40;
+                const cx=q.pts.reduce((s,p)=>s+p[0],0)/q.pts.length;
+                const cy=q.pts.reduce((s,p)=>s+p[1],0)/q.pts.length;
+                q.pts=q.pts.map(([x,y])=>clp(cx+(x-cx)*sc,cy+(y-cy)*sc));
+            }
+            else return rPoly();
+            return q;
+        }
+
+        // ── Render ─────────────────────────────────────────────────────
+        function render(ps,ctx,w,h){
+            ctx.clearRect(0,0,w,h);
+            ctx.fillStyle='#fff';
+            ctx.fillRect(0,0,w,h);
+            for(const p of ps){
+                ctx.beginPath();
+                ctx.moveTo(p.pts[0][0],p.pts[0][1]);
+                for(let i=1;i<p.pts.length;i++)ctx.lineTo(p.pts[i][0],p.pts[i][1]);
+                ctx.closePath();
+                ctx.fillStyle=`rgba(${p.r},${p.g},${p.b},${p.a/255})`;
+                ctx.fill();
+            }
+        }
+
+        // ── Fitness ─────────────────────────────────────────────────────
+        function calcErr(id){
+            const d=id.data,t=targetPx;
+            let e=0;
+            for(let i=0;i<d.length;i+=4){
+                const dr=d[i]-t[i];
+                const dg=d[i+1]-t[i+1];
+                const db=d[i+2]-t[i+2];
+                e+=dr*dr+dg*dg+db*db;
+            }
+            return e;
+        }
+        
+        function fitPct(e){
+            return Math.max(0,100*(1-e/(255*255*3*W*H)));
+        }
+
+        // ── Evolution ──────────────────────────────────────────────────
+        function evolveStep(){
+            const pc=parseInt(document.getElementById('selpoly').value);
+            const sp=parseInt(document.getElementById('selspd').value);
+            for(let s=0;s<sp;s++){
+                const idx=Math.random()*polys.length|0;
+                const candidate=polys.slice();
+                candidate[idx]=mutPoly(polys[idx],mutRate);
+                cvWork.width=W;cvWork.height=H;
+                render(candidate,ctxWork,W,H);
+                const err=calcErr(ctxWork.getImageData(0,0,W,H));
+                if(err<bestErr){
+                    polys=candidate;
+                    bestPolys=candidate.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
+                    bestErr=err;
+                    impr++;
+                    mutRate=Math.max(0.18,mutRate*0.9999);
+                }else{
+                    mutRate=Math.min(2.2,mutRate*1.00005);
                 }
-                
-                if (this.trainingData.length % 10 === 0) 
-                    this.trainModel();
+                gen++;
+                rateT.n++;
             }
-            
-            getSessionId() {
-                let session = localStorage.getItem('pigment_v5_session');
-                if (!session) {
-                    session = 'v5_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('pigment_v5_session', session);
-                }
-                return session;
-            }
-            
-            async syncToSupabase(examples) {
-                if (!supabase) return;
-                try {
-                    await supabase
-                        .from('training_data')
-                        .insert(examples.map(ex => ({
-                            genome: ex.genome,
-                            fitness: ex.fitness,
-                            parameters: ex.parameters,
-                            session_id: ex.session_id,
-                            generation: ex.generation,
-                            version: 'v5',
-                            created_at: new Date(ex.timestamp).toISOString()
-                        })));
-                    this.cloudCount += examples.length;
-                    this.updateBadge();
-                } catch (e) {}
-            }
-            
-            extractParams(genome) {
-                return {
-                    craquelure: 0.2 + Math.random() * 1.0,
-                    sss: 0.3 + Math.random() * 1.1,
-                    sfumato: 0.4 + Math.random() * 1.2,
-                    illumination: 0.7 + Math.random() * 0.6,
-                    age: 0.4 + Math.random() * 0.8,
-                    colorTemp: -0.4 + Math.random() * 0.9
-                };
-            }
-            
-            trainModel() {
-                if (this.trainingData.length < 10) return;
-                const recent = this.trainingData.slice(-100);
-                const fitnesses = recent.map(e => e.fitness);
-                this.model = {
-                    avgFitness: fitnesses.reduce((a,b) => a+b, 0) / fitnesses.length,
-                    bestFitness: Math.max(...fitnesses),
-                    confidence: Math.min(90, this.trainingData.length / 2)
-                };
-                document.getElementById('bAISuggest').disabled = false;
-            }
-            
-            suggestParameters() {
-                if (!this.model) return this.defaultParams();
-                
-                const best = this.trainingData
-                    .filter(ex => ex.fitness > (this.model.avgFitness * 1.1))
-                    .slice(0, 10);
-                
-                if (best.length === 0) return this.defaultParams();
-                
-                const avg = best.reduce((acc, ex) => {
-                    if (ex.parameters) {
-                        Object.keys(ex.parameters).forEach(k => {
-                            acc[k] = (acc[k] || 0) + ex.parameters[k];
-                        });
-                    }
-                    return acc;
-                }, {});
-                
-                Object.keys(avg).forEach(k => avg[k] /= best.length);
-                
-                return {
-                    craquelure: avg.craquelure || 0.55,
-                    sss: avg.sss || 0.65,
-                    sfumato: avg.sfumato || 0.75,
-                    illumination: avg.illumination || 0.95,
-                    age: avg.age || 0.75,
-                    colorTemp: avg.colorTemp || 0.45,
-                    confidence: this.model.confidence
-                };
-            }
-            
-            defaultParams() {
-                return {
-                    craquelure: 0.6, sss: 0.7, sfumato: 0.8,
-                    illumination: 1.0, age: 0.8, colorTemp: 0.0,
-                    confidence: 0
-                };
-            }
-            
-            save() {
-                localStorage.setItem('pigment_v5_training', JSON.stringify(this.trainingData));
-            }
-            
-            updateBadge() {
-                document.getElementById('trainingBadge').innerHTML = 
-                    `🤖 Local: ${this.trainingData.length} | Cloud: ${this.cloudCount}`;
-                document.getElementById('st').textContent = this.trainingData.length;
-                document.getElementById('sc').textContent = this.cloudCount;
+            if(polys.length<pc && gen%900===0){
+                polys.push(rPoly());
+                bestPolys=polys.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
             }
         }
 
-        // ========== EVOLUTION ENGINE ==========
-        const BASE_W = 200, BASE_H = 300;
-        let W = BASE_W, H = BASE_H;
-        let targetPx = null;
-        let polys = [], bestPolys = [], bestErr = Infinity;
-        let running = false, paused = false;
-        let gen = 0, impr = 0, mutRate = 1.0;
-        let rateT = {n:0, t:performance.now()};
-        let fitHist = [];
-        let raf = null;
-        let qStateCount = 0;
-
-        const cvWork = document.createElement('canvas');
-        const ctxWork = cvWork.getContext('2d');
-        const cvT = document.getElementById('cvt'), ctxT = cvT.getContext('2d');
-        const cvE = document.getElementById('cve'), ctxE = cvE.getContext('2d');
-        const cvD = document.getElementById('cvd'), ctxD = cvD.getContext('2d');
-        const crv = document.getElementById('crv'), crvCtx = crv.getContext('2d');
-        const DS = 2;
-
-        const aiTrainer = new AITrainer();
-
-        async function loadQStateCount() {
-            if (!supabase) return;
-            try {
-                const { count } = await supabase
-                    .from('rl_q_table')
-                    .select('*', { count: 'exact', head: true });
-                qStateCount = count || 0;
-                document.getElementById('sq').textContent = qStateCount;
-            } catch (e) {}
+        let fc=0;
+        
+        function frame(){
+            if(!running||paused){raf=null;return;}
+            evolveStep();
+            fc++;
+            if(fc%4===0)updateDisplay();
+            raf=requestAnimationFrame(frame);
         }
-        loadQStateCount();
 
-        // ========== V5 SYNTAX GENERATION ==========
-        function genV5PG() {
-            const fp = fitPct(bestErr);
-            const date = new Date().toISOString().split('T')[0];
+        function updateDisplay(){
+            cvWork.width=W;cvWork.height=H;
+            render(bestPolys,ctxWork,W,H);
+            const dw=W*DS,dh=H*DS;
+            ctxE.drawImage(cvWork,0,0,dw,dh);
             
-            let pg = `-- PIGMENT Genome v5
+            // Diff
+            const ev=ctxWork.getImageData(0,0,W,H);
+            const diff=ctxD.createImageData(W,H);
+            for(let i=0;i<ev.data.length;i+=4){
+                diff.data[i]=Math.min(255,Math.abs(ev.data[i]-targetPx[i])*4);
+                diff.data[i+1]=Math.min(255,Math.abs(ev.data[i+1]-targetPx[i+1])*4);
+                diff.data[i+2]=Math.min(255,Math.abs(ev.data[i+2]-targetPx[i+2])*4);
+                diff.data[i+3]=255;
+            }
+            const tmp=document.createElement('canvas');
+            tmp.width=W;
+            tmp.height=H;
+            tmp.getContext('2d').putImageData(diff,0,0);
+            ctxD.drawImage(tmp,0,0,dw,dh);
+            
+            // Stats
+            const fp=fitPct(bestErr);
+            document.getElementById('sg').textContent=gen.toLocaleString();
+            document.getElementById('sf').textContent=fp.toFixed(2)+'%';
+            document.getElementById('si').textContent=impr.toLocaleString();
+            document.getElementById('sm').textContent=mutRate.toFixed(3);
+            
+            const now=performance.now(),dt=(now-rateT.t)/1000;
+            if(dt>0.5){
+                document.getElementById('sr').textContent=(rateT.n/dt|0)+'/s';
+                rateT={n:0,t:now};
+            }
+            
+            fitHist.push(fp);
+            if(fitHist.length>300)fitHist.shift();
+            drawCurve();
+            
+            if(impr>0&&impr%3000===0)document.getElementById('pg-out').value=genPG();
+        }
+
+        function drawCurve(){
+            const cw=crv.width,ch=crv.height;
+            crvCtx.clearRect(0,0,cw,ch);
+            if(fitHist.length<2)return;
+            const mx=Math.max(...fitHist),mn=Math.min(...fitHist),rng=Math.max(mx-mn,0.5);
+            crvCtx.strokeStyle='#c0a030';
+            crvCtx.lineWidth=1.5;
+            crvCtx.beginPath();
+            for(let i=0;i<fitHist.length;i++){
+                const x=(i/(fitHist.length-1))*cw;
+                const y=ch-((fitHist[i]-mn)/rng)*(ch-4)-2;
+                i===0?crvCtx.moveTo(x,y):crvCtx.lineTo(x,y);
+            }
+            crvCtx.stroke();
+            crvCtx.fillStyle='#3a3828';
+            crvCtx.font='10px Courier New';
+            crvCtx.fillText(mx.toFixed(1)+'%',4,11);
+            crvCtx.fillText(mn.toFixed(1)+'%',4,ch-3);
+        }
+
+        // ── Controls ───────────────────────────────────────────────────
+        function doStart(){
+            if(!targetPx)return;
+            running=true;
+            paused=false;
+            document.getElementById('bstart').disabled=true;
+            document.getElementById('bpause').disabled=false;
+            if(!raf)raf=requestAnimationFrame(frame);
+        }
+        
+        function doPause(){
+            paused=!paused;
+            document.getElementById('bpause').textContent=paused?'▶ Resume':'⏸ Pause';
+            if(!paused&&!raf)raf=requestAnimationFrame(frame);
+        }
+        
+        function doReset(){
+            if(raf){
+                cancelAnimationFrame(raf);
+                raf=null;
+            }
+            running=false;
+            paused=false;
+            
+            const pc=parseInt(document.getElementById('selpoly').value);
+            polys=Array.from({length:pc},()=>rPoly());
+            bestPolys=polys.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
+            
+            cvWork.width=W;
+            cvWork.height=H;
+            render(bestPolys,ctxWork,W,H);
+            bestErr=calcErr(ctxWork.getImageData(0,0,W,H));
+            
+            gen=0;
+            impr=0;
+            mutRate=1.0;
+            fitHist=[];
+            rateT={n:0,t:performance.now()};
+            
+            document.getElementById('bstart').disabled=false;
+            document.getElementById('bpause').disabled=true;
+            document.getElementById('bpause').textContent='⏸ Pause';
+            document.getElementById('pg-out').value='';
+            
+            updateDisplay();
+        }
+
+        // ── Toggle evolved panel ───────────────────────────────────────
+        function toggleEvolved(){
+            document.body.classList.toggle('evolved-hidden');
+            const btn=document.getElementById('bToggleEvolved');
+            btn.textContent=document.body.classList.contains('evolved-hidden')?'👁 Show Evolved':'👁 Hide Evolved';
+        }
+
+        // ── v5 Genome export ───────────────────────────────────────────
+        function genPG(){
+            const fp=fitPct(bestErr);
+            const date=new Date().toISOString().split('T')[0];
+            
+            let pg=`-- PIGMENT Genome v5
 -- Generated: ${date}
--- Generation: ${gen}
--- Fitness: ${fp.toFixed(1)}%
+-- Generation: ${gen.toLocaleString()}
+-- Fitness: ${fp.toFixed(2)}%
 -- Polygons: ${bestPolys.length}
--- Training Samples: ${aiTrainer.trainingData.length}
--- Q-States: ${qStateCount}
+-- Artist: PIGMENT Evolutionary Engine
 
 canvas {
   width: ${W}
@@ -356,361 +467,98 @@ canvas {
   ground: canvas
   age: 0yr
   light: upper-left
-  title: "AI-Evolved Painting"
-  artist: "PIGMENT v5 AI"
+  title: "Evolved Painting"
+  artist: "PIGMENT AI"
   date: "${date}"
 }
 
 palette {
 `;
 
-            const colors = new Map();
-            bestPolys.forEach(p => {
-                const hex = '#' + [p.r, p.g, p.b].map(c => 
-                    c.toString(16).padStart(2, '0')).join('');
-                if (!colors.has(hex)) colors.set(hex, `c${colors.size}`);
+            // Generate palette from unique colors
+            const colorMap=new Map();
+            bestPolys.forEach((p,i)=>{
+                const hex='#'+[p.r,p.g,p.b].map(c=>c.toString(16).padStart(2,'0')).join('');
+                colorMap.set(hex,`color_${colorMap.size}`);
             });
             
-            colors.forEach((name, hex) => {
-                pg += `  ${name}: ${hex}\n`;
+            colorMap.forEach((name,hex)=>{
+                pg+=`  ${name}: ${hex}\n`;
             });
             
-            pg += `}\n\nlayer base {\n`;
+            pg+=`}\n\nlayer base {\n`;
             
-            bestPolys.forEach((p, i) => {
-                const hex = '#' + [p.r, p.g, p.b].map(c => 
-                    c.toString(16).padStart(2, '0')).join('');
-                const name = colors.get(hex);
-                const pts = p.pts.map(([x,y]) => 
-                    `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+            // Generate zones
+            bestPolys.forEach((p,i)=>{
+                const hex='#'+[p.r,p.g,p.b].map(c=>c.toString(16).padStart(2,'0')).join('');
+                const colorName=colorMap.get(hex);
+                const opacity=(p.a/255).toFixed(3);
+                const points=p.pts.map(([x,y])=>`${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
                 
-                pg += `
-  zone poly_${i} {
-    color: palette.${name}
-    opacity: ${(p.a/255).toFixed(2)}
-    points: ${pts}
+                pg+=`\n  zone poly_${i} {
+    color: palette.${colorName}
+    opacity: ${opacity}
+    points: ${points}
   }\n`;
             });
             
-            pg += `}\n\n-- v5 Metadata
--- @training_samples ${aiTrainer.trainingData.length}
--- @best_fitness ${fp.toFixed(2)}
-`;
+            pg+=`}\n\n-- End of genome`;
             return pg;
         }
-
-        // ========== POLYGON FUNCTIONS ==========
-        function rPoly() {
-            const sz = W * (0.05 + Math.random() * 0.15);
-            const cx = Math.random() * W, cy = Math.random() * H;
-            const pts = [];
-            for (let i = 0; i < 3; i++) {
-                const a = (i/3) * Math.PI * 2 + Math.random() * 0.8;
-                const r = sz * (0.5 + Math.random() * 0.8);
-                pts.push([cx + Math.cos(a)*r, cy + Math.sin(a)*r]);
-            }
-            return {
-                pts: pts,
-                r: Math.random()*255|0,
-                g: Math.random()*255|0,
-                b: Math.random()*255|0,
-                a: 30 + Math.random()*100|0
-            };
+        
+        function doExport(){
+            const t=genPG();
+            const a=document.createElement('a');
+            a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+            a.download=`evolved_gen${gen}.pg`;
+            a.click();
+            document.getElementById('pg-out').value=t;
         }
-
-        function mutPoly(p, mr) {
-            const q = {
-                pts: p.pts.map(pt => [...pt]),
-                r: p.r, g: p.g, b: p.b, a: p.a
-            };
-            const r = Math.random();
-            
-            if (r < 0.3) {
-                const vi = Math.random() * q.pts.length | 0;
-                const s = W * 0.04 * mr;
-                q.pts[vi][0] += (Math.random()*2-1)*s;
-                q.pts[vi][1] += (Math.random()*2-1)*s;
-            } else if (r < 0.5) {
-                const dx = (Math.random()*2-1) * W * 0.03 * mr;
-                const dy = (Math.random()*2-1) * H * 0.03 * mr;
-                q.pts = q.pts.map(([x,y]) => [x+dx, y+dy]);
-            } else if (r < 0.7) {
-                const ch = ['r','g','b'][Math.random()*3|0];
-                q[ch] = Math.max(0, Math.min(255, q[ch] + (Math.random()*2-1)*30));
-            } else {
-                q.a = Math.max(10, Math.min(200, q.a + (Math.random()*2-1)*15));
-            }
-            return q;
+        
+        function doCopy(){
+            navigator.clipboard.writeText(genPG()).catch(()=>{});
+            document.getElementById('pg-out').value=genPG();
         }
-
-        function render(ps, ctx, w, h) {
-            ctx.clearRect(0, 0, w, h);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, w, h);
-            for (const p of ps) {
-                ctx.beginPath();
-                ctx.moveTo(p.pts[0][0], p.pts[0][1]);
-                for (let i = 1; i < p.pts.length; i++)
-                    ctx.lineTo(p.pts[i][0], p.pts[i][1]);
-                ctx.closePath();
-                ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.a/255})`;
-                ctx.fill();
-            }
-        }
-
-        function calcErr(id) {
-            const d = id.data, t = targetPx;
-            let err = 0;
-            for (let i = 0; i < d.length; i += 4) {
-                const dr = d[i] - t[i];
-                const dg = d[i+1] - t[i+1];
-                const db = d[i+2] - t[i+2];
-                err += dr*dr + dg*dg + db*db;
-            }
-            return err;
-        }
-
-        function fitPct(err) {
-            return Math.max(0, 100 - err / (255*255*3*W*H) * 100);
-        }
-
-        function evolveStep() {
-            const steps = parseInt(document.getElementById('selspd').value);
-            for (let s = 0; s < steps; s++) {
-                const idx = Math.random() * polys.length | 0;
-                const candidate = polys.slice();
-                candidate[idx] = mutPoly(polys[idx], mutRate);
-                
-                render(candidate, ctxWork, W, H);
-                const err = calcErr(ctxWork.getImageData(0, 0, W, H));
-                
-                if (err < bestErr) {
-                    polys = candidate;
-                    bestPolys = candidate.map(p => ({...p, pts: p.pts.map(pt => [...pt])}));
-                    bestErr = err;
-                    impr++;
-                    mutRate = Math.max(0.2, mutRate * 0.995);
-                    
-                    if (impr % 3 === 0) {
-                        aiTrainer.addExample(genV5PG(), fitPct(bestErr), null);
-                    }
-                } else {
-                    mutRate = Math.min(2.0, mutRate * 1.002);
-                }
-                gen++;
-                rateT.n++;
-            }
-        }
-
-        function frame() {
-            if (!running || paused) { raf = null; return; }
-            evolveStep();
-            if (gen % 10 === 0) updateDisplay();
-            raf = requestAnimationFrame(frame);
-        }
-
-        function updateDisplay() {
-            render(bestPolys, ctxWork, W, H);
-            const dw = W*DS, dh = H*DS;
-            ctxE.drawImage(cvWork, 0, 0, dw, dh);
-            
-            const fp = fitPct(bestErr);
-            document.getElementById('sg').textContent = gen.toLocaleString();
-            document.getElementById('sf').textContent = fp.toFixed(1) + '%';
-            document.getElementById('si').textContent = impr.toLocaleString();
-            
-            fitHist.push(fp);
-            if (fitHist.length > 200) fitHist.shift();
-            drawCurve();
-            
-            const now = performance.now();
-            if (now - rateT.t > 1000) {
-                rateT = {n:0, t:now};
-            }
-        }
-
-        function drawCurve() {
-            const w = crv.width, h = crv.height;
-            crvCtx.clearRect(0, 0, w, h);
-            if (fitHist.length < 2) return;
-            
-            const max = Math.max(...fitHist);
-            const min = Math.min(...fitHist);
-            const range = max - min || 1;
-            
-            crvCtx.strokeStyle = '#c0a030';
-            crvCtx.beginPath();
-            for (let i = 0; i < fitHist.length; i++) {
-                const x = (i / (fitHist.length-1)) * w;
-                const y = h - ((fitHist[i] - min) / range) * h;
-                if (i === 0) crvCtx.moveTo(x, y);
-                else crvCtx.lineTo(x, y);
-            }
-            crvCtx.stroke();
-        }
-
-        // ========== IMAGE LOADING ==========
-        function loadImage(file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const ratio = img.height / img.width;
-                    W = BASE_W;
-                    H = Math.round(W * ratio);
-                    
-                    cvWork.width = W;
-                    cvWork.height = H;
-                    ctxWork.drawImage(img, 0, 0, W, H);
-                    targetPx = ctxWork.getImageData(0, 0, W, H).data;
-                    
-                    [cvT, cvE, cvD].forEach(c => {
-                        c.width = W * DS;
-                        c.height = H * DS;
-                    });
-                    ctxT.drawImage(img, 0, 0, W*DS, H*DS);
-                    
-                    document.getElementById('bstart').disabled = false;
-                    document.getElementById('breset').disabled = false;
-                    document.getElementById('bAISuggest').disabled = false;
-                    
-                    doReset();
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // ========== CONTROLS ==========
-        function doStart() {
-            if (!targetPx) return;
-            running = true;
-            paused = false;
-            document.getElementById('bstart').disabled = true;
-            document.getElementById('bpause').disabled = false;
-            if (!raf) raf = requestAnimationFrame(frame);
-        }
-
-        function doPause() {
-            paused = !paused;
-            document.getElementById('bpause').textContent = paused ? '▶ Resume' : '⏸ Pause';
-            if (!paused && !raf) raf = requestAnimationFrame(frame);
-        }
-
-        function doReset() {
-            if (raf) cancelAnimationFrame(raf);
-            running = false;
-            paused = false;
-            
-            const count = parseInt(document.getElementById('selpoly').value);
-            polys = Array.from({length: count}, () => rPoly());
-            bestPolys = polys.map(p => ({...p, pts: p.pts.map(pt => [...pt])}));
-            
-            render(bestPolys, ctxWork, W, H);
-            bestErr = calcErr(ctxWork.getImageData(0, 0, W, H));
-            
-            gen = 0; impr = 0; mutRate = 1.0; fitHist = [];
-            rateT = {n:0, t:performance.now()};
-            
-            document.getElementById('bstart').disabled = false;
-            document.getElementById('bpause').disabled = true;
-            document.getElementById('bpause').textContent = '⏸ Pause';
-            document.getElementById('pg-out').value = '';
-            
-            updateDisplay();
-        }
-
-        function getAISuggestion() {
-            const suggestion = aiTrainer.suggestParameters();
-            const panel = document.getElementById('aiPanel');
-            const paramsDiv = document.getElementById('aiParams');
-            
-            paramsDiv.innerHTML = Object.entries(suggestion)
-                .filter(([k]) => k !== 'confidence')
-                .map(([k, v]) => `
-                    <div class="ai-param">
-                        <label>${k}</label>
-                        <value>${v.toFixed(2)}</value>
-                    </div>
-                `).join('');
-            
-            document.getElementById('aiConfidence').innerHTML = 
-                `confidence: ${Math.round(suggestion.confidence)}%`;
-            panel.style.display = 'block';
-        }
-
-        async function syncWithSupabase() {
-            document.getElementById('trainingBadge').innerHTML = '🤖 Syncing...';
-            if (aiTrainer.trainingData.length > 0) {
-                await aiTrainer.syncToSupabase(aiTrainer.trainingData.slice(-10));
-            }
-            await aiTrainer.loadCloudCount();
-            await loadQStateCount();
-        }
-
-        function showDashboard() {
-            const stats = aiTrainer.model || {confidence: 0};
-            alert(
-                `🤖 V5 AI TRAINING STATS\n\n` +
-                `Local Samples: ${aiTrainer.trainingData.length}\n` +
-                `Cloud Samples: ${aiTrainer.cloudCount}\n` +
-                `Q-States: ${qStateCount}\n` +
-                `Confidence: ${Math.round(stats.confidence)}%\n` +
-                `Best Fitness: ${stats.bestFitness?.toFixed(1) || 0}%`
-            );
-        }
-
-        function exportTrainingData() {
-            const blob = new Blob([JSON.stringify(aiTrainer.trainingData, null, 2)], 
-                {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pigment_v5_training_${Date.now()}.json`;
+        
+        function doSaveImg(){
+            cvWork.width=W*4;
+            cvWork.height=H*4;
+            render(bestPolys,ctxWork,W*4,H*4);
+            const a=document.createElement('a');
+            a.href=cvWork.toDataURL('image/png');
+            a.download=`evolved_gen${gen}.png`;
             a.click();
         }
 
-        function doExport() {
-            const pg = genV5PG();
-            const blob = new Blob([pg], {type: 'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `evolved_v5_gen${gen}.pg`;
-            a.click();
-            document.getElementById('pg-out').value = pg;
-        }
-
-        function doCopy() {
-            navigator.clipboard.writeText(genV5PG());
-            document.getElementById('pg-out').value = genV5PG();
-        }
-
-        // ========== EVENT HANDLERS ==========
-        document.getElementById('fi').onchange = e => {
-            if (e.target.files[0]) loadImage(e.target.files[0]);
+        // ── File drop ──────────────────────────────────────────────────
+        document.getElementById('fi').onchange=e=>{
+            if(e.target.files.length)loadFiles(e.target.files);
         };
-
-        const dz = document.getElementById('dropzone');
-        dz.ondragover = e => { e.preventDefault(); dz.classList.add('over'); };
-        dz.ondragleave = () => dz.classList.remove('over');
-        dz.ondrop = e => {
+        
+        const dz=document.getElementById('dropzone');
+        dz.addEventListener('dragover',e=>{
+            e.preventDefault();
+            dz.classList.add('over');
+        });
+        
+        dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+        
+        dz.addEventListener('drop',e=>{
             e.preventDefault();
             dz.classList.remove('over');
-            if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
-        };
+            if(e.dataTransfer.files.length)loadFiles(e.dataTransfer.files);
+        });
 
-        function resizeCrv() {
-            crv.width = Math.min(600, window.innerWidth - 40);
-            crv.height = 72;
+        // Curve resize
+        function rCrv(){
+            const parent=document.getElementById('crv').parentElement;
+            crv.width=Math.min(parent.clientWidth||500,500);
+            crv.height=72;
             drawCurve();
         }
-        window.addEventListener('resize', resizeCrv);
-        resizeCrv();
         
-        setInterval(() => {
-            if (aiTrainer.trainingData.length > 0) syncWithSupabase();
-        }, 300000);
+        rCrv();
+        window.addEventListener('resize',rCrv);
     </script>
 </body>
 </html>
