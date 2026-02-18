@@ -6,7 +6,10 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
   
   try {
     const { imageBase64, text } = await req.json()
@@ -17,16 +20,26 @@ serve(async (req) => {
     let embedding: number[]
     if (text) {
       // Text embedding for style descriptions
-      embedding = await session.run(text, { mean_pool: true, normalize: true })
+      embedding = await session.run(text, { 
+        mean_pool: true, 
+        normalize: true 
+      })
     } else if (imageBase64) {
       // For images, we describe them as text first
-      const description = `evolutionary polygon art fitness ${Date.now()}`
-      embedding = await session.run(description, { mean_pool: true, normalize: true })
+      // In production, use actual image-to-text model
+      const description = `evolutionary polygon art with fitness score`
+      embedding = await session.run(description, { 
+        mean_pool: true, 
+        normalize: true 
+      })
     } else {
       throw new Error('Either imageBase64 or text must be provided')
     }
     
-    return new Response(JSON.stringify({ embedding, dimensions: embedding.length }), {
+    return new Response(JSON.stringify({ 
+      embedding, 
+      dimensions: embedding.length 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
