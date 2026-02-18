@@ -21,8 +21,8 @@ jobs:
     - name: Install Supabase CLI
       run: |
         # Clean up any previous installation
-        rm -f supabase
-        rm -f supabase_linux_amd64.tar.gz
+        rm -rf supabase
+        rm -f supabase.tar.gz
         
         # Get the latest version
         LATEST_VERSION=$(curl -s https://api.github.com/repos/supabase/cli/releases/latest | grep tag_name | cut -d '"' -f 4)
@@ -33,7 +33,7 @@ jobs:
         tar -xzf supabase.tar.gz
         chmod +x supabase
         sudo mv supabase /usr/local/bin/supabase
-        rm supabase.tar.gz
+        rm -f supabase.tar.gz
         supabase --version
     
     - name: Link Supabase project
