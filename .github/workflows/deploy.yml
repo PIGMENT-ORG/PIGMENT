@@ -19,26 +19,10 @@ jobs:
         node-version: '20'
     
     - name: Install Supabase CLI
-      run: |
-        # Clean up any previous installation
-        rm -rf supabase
-        rm -f supabase.tar.gz
-
-        # Get the latest version tag
-        LATEST_VERSION=$(curl -s https://api.github.com/repos/supabase/cli/releases/latest | grep tag_name | cut -d '"' -f 4)
-        echo "Installing Supabase CLI version: $LATEST_VERSION"
-
-        # Construct the correct download URL for the Linux AMD64 tarball
-        DOWNLOAD_URL="https://github.com/supabase/cli/releases/download/${LATEST_VERSION}/supabase_${LATEST_VERSION#v}_linux_amd64.tar.gz"
-        echo "Downloading from: $DOWNLOAD_URL"
-
-        # Download and install
-        curl -fsSL "$DOWNLOAD_URL" -o supabase.tar.gz
-        tar -xzf supabase.tar.gz
-        chmod +x supabase
-        sudo mv supabase /usr/local/bin/supabase
-        rm -f supabase.tar.gz
-        supabase --version
+      run: npm install -g supabase --force
+    
+    - name: Verify Supabase installation
+      run: supabase --version
     
     - name: Link Supabase project
       run: supabase link --project-ref slfxwkvhomomdcqpkfqp
