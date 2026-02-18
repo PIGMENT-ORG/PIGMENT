@@ -20,45 +20,103 @@
             flex-direction: column;
             align-items: center;
             padding: 15px;
-            gap: 12px;
+            gap: 15px;
         }
 
         h1 {
             font-family: Georgia, serif;
             font-style: italic;
-            font-size: clamp(1.2em, 5vw, 1.8em);
+            font-size: clamp(1.3em, 5vw, 1.8em);
             color: #e8d898;
             letter-spacing: .04em;
             text-align: center;
         }
 
         .sub {
-            font-size: clamp(0.6em, 3vw, 0.7em);
-            color: #44402e;
+            font-size: clamp(0.6em, 3vw, 0.8em);
+            color: #5a5440;
             letter-spacing: .08em;
             text-align: center;
         }
 
-        /* Drop Zones */
-        #dropzone, #pgLoader {
-            border: 2px dashed #3a3828;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            color: #5a5440;
-            font-size: clamp(0.7em, 4vw, 0.83em);
-            transition: all .2s;
-            width: 100%;
-            max-width: 500px;
-            margin: 5px auto;
+        /* Dashboard Link - Only Link */
+        .dashboard-link {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #1a2818;
+            border: 1px solid #a0c080;
+            color: #d8f0c0;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8em;
+            z-index: 1000;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        .dashboard-link:hover {
+            background: #2a3828;
         }
 
-        #dropzone.over, #pgLoader.over,
-        #dropzone:hover, #pgLoader:hover {
-            border-color: #b89838;
-            color: #d8c878;
-            background: rgba(184, 152, 56, .04);
+        /* Dropzone */
+        #dropzone {
+            border: 2px dashed #3a3828;
+            border-radius: 8px;
+            padding: clamp(15px, 5vw, 30px);
+            text-align: center;
+            cursor: pointer;
+            width: 100%;
+            max-width: 600px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #dropzone.over, #dropzone:hover {
+            border-color: #c8a838;
+            background: rgba(184, 152, 56, 0.04);
+        }
+
+        /* Image Queue */
+        #imageQueue {
+            width: 100%;
+            max-width: 600px;
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .queue-thumbnails {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+
+        .queue-thumb {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #3a3828;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .queue-count {
+            background: #1a2818;
+            color: #a0c080;
+            padding: 2px 8px;
+            border-radius: 12px;
         }
 
         /* Controls */
@@ -75,23 +133,24 @@
             background: #141210;
             border: 1px solid #3a3828;
             color: #b8a878;
-            padding: 8px 12px;
+            padding: 10px 16px;
             border-radius: 4px;
             cursor: pointer;
             font-family: inherit;
-            font-size: clamp(0.7em, 3.5vw, 0.8em);
+            font-size: clamp(0.7em, 3vw, 0.9em);
+            transition: all 0.15s;
             min-height: 44px;
-            transition: all .15s;
+            min-width: 44px;
         }
 
         button:hover {
             background: #1e1c14;
-            border-color: #7a6830;
-            color: #d8c878;
+            border-color: #c8a838;
+            color: #e8d080;
         }
 
         button:disabled {
-            opacity: .35;
+            opacity: 0.35;
             cursor: not-allowed;
         }
 
@@ -101,14 +160,49 @@
             color: #e8d080;
         }
 
-        button.go:hover {
-            background: #242010;
+        .toggle-btn {
+            background: #1a1a14;
+            border-color: #7a6840;
+        }
+
+        /* Parameter Controls */
+        .param-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            background: #0c0c0a;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2a2818;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: clamp(0.7em, 3vw, 0.8em);
+            color: #7a6840;
+            flex-wrap: wrap;
+        }
+
+        select, input[type=range] {
+            background: #141210;
+            border: 1px solid #3a3828;
+            color: #b8a878;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.9em;
+            min-height: 40px;
         }
 
         /* Canvas Panels */
         .panels {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
@@ -124,208 +218,95 @@
         }
 
         .plabel {
-            font-size: clamp(0.6em, 3vw, 0.65em);
-            color: #3a3828;
+            font-size: 0.65em;
+            color: #5a5440;
             letter-spacing: .09em;
             text-transform: uppercase;
         }
 
         canvas.view {
-            border: 1px solid #1e1c14;
+            border: 1px solid #2a2818;
             image-rendering: pixelated;
             width: 100%;
             height: auto;
-            aspect-ratio: 2/3;
-            max-width: 220px;
+            aspect-ratio: 1/1;
+            max-width: 250px;
+        }
+
+        #evolved-panel {
+            display: none;
         }
 
         /* Stats */
         .stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            font-size: clamp(0.7em, 3vw, 0.76em);
-            color: #7a7460;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
             background: #0c0c0a;
-            padding: 10px;
+            border: 1px solid #2a2818;
             border-radius: 8px;
-            border: 1px solid #1e1c14;
+            padding: 15px;
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
         }
 
         .stat-item {
             text-align: center;
-            min-width: 70px;
         }
 
         .sv {
-            font-size: clamp(1em, 4vw, 1.28em);
-            color: #c0b080;
+            font-size: clamp(1em, 4vw, 1.3em);
+            color: #e8d898;
             font-family: Georgia, serif;
         }
 
         .sl {
-            font-size: clamp(0.6em, 2.5vw, 0.67em);
-            color: #3a3828;
+            font-size: 0.6em;
+            color: #5a5440;
             letter-spacing: .06em;
         }
 
-        /* Dashboard Button */
-        .dashboard-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: #1a2818;
-            border: 1px solid #a0c080;
-            color: #d8f0c0;
-            padding: 8px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.8em;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .dashboard-btn:hover {
-            background: #2a3828;
-        }
-
-        /* Toggle Switch */
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 5px 0;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #3a3828;
-            transition: .3s;
-            border-radius: 24px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: #c8a838;
-            transition: .3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background-color: #5a7840;
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(26px);
-        }
-
-        .toggle-label {
-            color: #a09870;
-            font-size: 0.8em;
-        }
-
-        /* Multi-image selector */
-        .multi-selector {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            background: #0c0c0a;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #2a2818;
+        /* Progress Bar */
+        .progress-bar {
             width: 100%;
-            max-width: 600px;
-        }
-
-        .image-counter {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .image-counter span {
-            color: #c8a838;
-            font-weight: bold;
-        }
-
-        .thumbnails {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 5px 0;
-        }
-
-        .thumbnail {
-            width: 50px;
-            height: 50px;
+            max-width: 800px;
+            height: 20px;
+            background: #141210;
             border: 1px solid #3a3828;
-            border-radius: 4px;
-            object-fit: cover;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .thumbnail:hover {
-            border-color: #c8a838;
-            transform: scale(1.1);
+        .progress-fill {
+            height: 100%;
+            background: #c8a838;
+            width: 0%;
+            transition: width 0.3s;
         }
 
-        .thumbnail.active {
-            border: 2px solid #c8a838;
-            box-shadow: 0 0 10px rgba(200,168,56,0.5);
-        }
-
-        /* Progress bar */
+        /* Fitness Curve */
         #crv {
             background: #0a0a08;
-            border: 1px solid #1e1c14;
+            border: 1px solid #2a2818;
             border-radius: 3px;
             width: 100%;
-            max-width: 700px;
-            height: clamp(60px, 15vw, 72px);
+            max-width: 800px;
+            height: 80px;
         }
 
+        /* Export Box */
         .expbox {
             background: #0c0c0a;
-            border: 1px solid #1e1c14;
+            border: 1px solid #2a2818;
             border-radius: 6px;
             padding: 12px;
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
         }
 
         .expbox h3 {
             font-family: Georgia, serif;
-            font-size: clamp(0.8em, 4vw, 0.85em);
+            font-size: 0.9em;
             color: #7a6840;
             margin-bottom: 8px;
         }
@@ -334,13 +315,12 @@
             width: 100%;
             height: 120px;
             background: #080806;
-            border: 1px solid #181612;
+            border: 1px solid #2a2818;
             color: #908860;
-            font-family: 'Courier New', monospace;
-            font-size: clamp(0.65em, 3vw, 0.7em);
             padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7em;
             resize: vertical;
-            outline: none;
         }
 
         .row {
@@ -351,9 +331,18 @@
             justify-content: center;
         }
 
+        /* Batch Process Button */
+        #batchProcessBtn {
+            background: #1a2818;
+            border-color: #a0c080;
+            color: #d8f0c0;
+            display: none;
+        }
+
+        /* Alert Area */
         #alert-area {
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
         }
 
         .alert {
@@ -363,127 +352,98 @@
             padding: 8px;
             border-radius: 4px;
             margin: 5px 0;
-            font-size: clamp(0.7em, 3.5vw, 0.8em);
+            font-size: 0.8em;
         }
 
-        /* Hide elements */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Responsive */
+        /* Mobile Responsiveness */
         @media (max-width: 600px) {
-            body {
-                padding: 10px;
-                gap: 8px;
+            .panels {
+                flex-direction: column;
+                align-items: center;
             }
             
-            .dashboard-btn {
-                top: 10px;
-                right: 10px;
-                padding: 5px 10px;
-                font-size: 0.7em;
+            .panel {
+                width: 100%;
+                max-width: 280px;
             }
             
-            .thumbnail {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .stats {
-                gap: 8px;
-            }
-            
-            .stat-item {
-                min-width: 50px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .thumbnail {
-                width: 35px;
-                height: 35px;
+            .controls {
+                gap: 5px;
             }
             
             button {
-                padding: 6px 8px;
+                padding: 8px 10px;
+                font-size: 0.75em;
+            }
+            
+            .param-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            label {
+                justify-content: space-between;
+            }
+            
+            .dashboard-link {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
                 font-size: 0.7em;
             }
         }
 
-        /* Touch-friendly */
+        /* Touch Optimizations */
         @media (hover: none) and (pointer: coarse) {
-            button, #dropzone, #pgLoader {
+            button, select, #dropzone {
                 min-height: 48px;
             }
         }
     </style>
 </head>
 <body>
-    <a href="dashboard.html" class="dashboard-btn">📊 DASHBOARD</a>
+    <a href="dashboard.html" class="dashboard-link">📊 DASHBOARD</a>
 
     <h1>PIGMENT — Evolutionary Painter</h1>
-    <div class="sub">ROGER ALSING HILL-CLIMBING · PIGMENT V3 · MULTI-IMAGE SUPPORT</div>
+    <div class="sub">MULTI-IMAGE · SEMI-TRANSPARENT POLYGONS · REINFORCEMENT LEARNING</div>
 
-    <!-- Drop Zones -->
+    <!-- Drop Zone -->
     <div id="dropzone">
-        <div style="font-size:1.6em;margin-bottom:6px">🎨</div>
-        <div>Drop images or click to choose (up to 5)</div>
-        <div style="margin-top:5px; font-size:0.8em; opacity:0.7" id="imageCountDisplay">0/5 images loaded</div>
+        <div style="font-size:2em; margin-bottom:8px">🎨</div>
+        <div><strong>Drop up to 5 images here</strong> or click to choose</div>
+        <div style="font-size:0.7em; margin-top:5px; opacity:0.7">JPG, PNG, GIF (max 5 files)</div>
     </div>
-    <input type="file" id="fi" accept="image/*" multiple style="display:none">
+    <input type="file" id="fi" accept="image/*" multiple hidden>
 
-    <div id="pgLoader">
-        <div style="font-size:1.2em;margin-bottom:6px">🧬</div>
-        <div>Load .pg genome or paste (Ctrl+V)</div>
-    </div>
-    <input type="file" id="pgFile" accept=".pg" style="display:none">
-
-    <!-- Thumbnails for loaded images -->
-    <div id="thumbnails" class="thumbnails hidden"></div>
-
-    <!-- Multi-image selector -->
-    <div class="multi-selector" id="multiSelector" style="display:none;">
-        <div class="image-counter">
-            <span id="currentImageIndex">1</span>/<span id="totalImages">1</span>
+    <!-- Image Queue -->
+    <div id="imageQueue">
+        <div class="queue-header">
+            <span>📦 Image Queue</span>
+            <span class="queue-count" id="queueCount">0/5</span>
         </div>
-        <div class="controls" style="margin:0;">
-            <button id="prevImageBtn" disabled>◀ Prev</button>
-            <button id="nextImageBtn" disabled>Next ▶</button>
+        <div class="queue-thumbnails" id="queueThumbnails"></div>
+        <div class="row" style="margin-top:10px;">
+            <button id="batchProcessBtn" class="go">▶ Process All (5)</button>
+            <button id="clearQueueBtn">🗑️ Clear</button>
         </div>
-        <div>
-            <span class="toggle-label">Auto-switch every:</span>
-            <select id="autoSwitchTime">
-                <option value="0">Off</option>
-                <option value="30">30 sec</option>
-                <option value="60" selected>1 min</option>
-                <option value="120">2 min</option>
-                <option value="300">5 min</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Toggle for evolved panel -->
-    <div class="toggle-container">
-        <label class="toggle-switch">
-            <input type="checkbox" id="toggleEvolvedCheckbox">
-            <span class="toggle-slider"></span>
-        </label>
-        <span class="toggle-label">Show Evolved Panel</span>
     </div>
 
     <!-- Main Controls -->
     <div class="controls">
-        <button class="go" id="bstart" disabled>▶ Start</button>
-        <button id="bpause" disabled>⏸ Pause</button>
-        <button id="breset" disabled>↺ Reset</button>
-        <span style="width:1px;height:22px;background:#1e1c14"></span>
+        <button class="go" id="bstart" disabled onclick="doStart()">▶ START</button>
+        <button id="bpause" disabled onclick="doPause()">⏸ PAUSE</button>
+        <button id="breset" disabled onclick="doReset()">↺ RESET</button>
+        <button id="bstep" disabled onclick="doStep()">⏩ STEP</button>
+        <button id="toggleEvolved" class="toggle-btn" onclick="toggleEvolved()">👁️ Show Evolved</button>
+    </div>
+
+    <!-- Parameters -->
+    <div class="param-controls">
         <label>Polygons
             <select id="selpoly">
                 <option value="25">25</option>
                 <option value="50" selected>50</option>
                 <option value="100">100</option>
-                <option value="150">150</option>
                 <option value="200">200</option>
             </select>
         </label>
@@ -492,46 +452,66 @@
                 <option value="5">Slow (5)</option>
                 <option value="10">Medium (10)</option>
                 <option value="20" selected>Normal (20)</option>
-                <option value="30">Fast (30)</option>
-                <option value="40">Turbo (40)</option>
+                <option value="40">Fast (40)</option>
             </select>
         </label>
-        <label>Max size <input type="range" id="rsize" min="2" max="9" step=".5" value="4" style="width:80px"></label>
+        <label>Size
+            <input type="range" id="rsize" min="2" max="9" step=".5" value="4" style="width:100px">
+        </label>
     </div>
 
     <!-- Canvas Panels -->
     <div class="panels">
-        <div class="panel"><div class="plabel">Target</div><canvas class="view" id="cvt"></canvas></div>
-        <div class="panel" id="evolvedPanel"><div class="plabel">Evolved</div><canvas class="view" id="cve"></canvas></div>
-        <div class="panel"><div class="plabel">Diff ×4</div><canvas class="view" id="cvd"></canvas></div>
+        <div class="panel">
+            <div class="plabel">🎯 TARGET</div>
+            <canvas class="view" id="cvt" width="200" height="200"></canvas>
+        </div>
+        <div class="panel" id="evolved-panel">
+            <div class="plabel">🧬 EVOLVED</div>
+            <canvas class="view" id="cve" width="200" height="200"></canvas>
+        </div>
+        <div class="panel">
+            <div class="plabel">📊 DIFF</div>
+            <canvas class="view" id="cvd" width="200" height="200"></canvas>
+        </div>
     </div>
 
     <!-- Stats -->
     <div class="stats">
-        <div class="stat-item"><div class="sv" id="sg">0</div><div class="sl">Generation</div></div>
-        <div class="stat-item"><div class="sv" id="sf">0.00%</div><div class="sl">Fitness</div></div>
-        <div class="stat-item"><div class="sv" id="si">0</div><div class="sl">Improvements</div></div>
-        <div class="stat-item"><div class="sv" id="sr">0/s</div><div class="sl">Mut/sec</div></div>
-        <div class="stat-item"><div class="sv" id="sm">1.00</div><div class="sl">Mut rate</div></div>
+        <div class="stat-item"><span class="sv" id="sg">0</span><span class="sl">GEN</span></div>
+        <div class="stat-item"><span class="sv" id="sf">0.00%</span><span class="sl">FITNESS</span></div>
+        <div class="stat-item"><span class="sv" id="si">0</span><span class="sl">IMPR</span></div>
+        <div class="stat-item"><span class="sv" id="sr">0/s</span><span class="sl">SPEED</span></div>
+        <div class="stat-item"><span class="sv" id="stime">0:00</span><span class="sl">TIME</span></div>
+        <div class="stat-item"><span class="sv" id="sm">1.00</span><span class="sl">MUT</span></div>
     </div>
 
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Fitness Curve -->
     <canvas id="crv"></canvas>
 
+    <!-- Export Box -->
     <div class="expbox">
-        <h3>PIGMENT Genome Export</h3>
-        <textarea id="pg-out" readonly placeholder="Evolve first — genome will appear as PIGMENT .pg source..."></textarea>
+        <h3>🧬 GENOME EXPORT</h3>
+        <textarea id="pg-out" readonly placeholder="Genome will appear here..."></textarea>
         <div class="row">
-            <button onclick="doExport()">↓ Export .pg</button>
-            <button onclick="doCopy()">Copy</button>
-            <button onclick="doSaveImg()">Save PNG</button>
-            <button onclick="document.getElementById('pg-out').value=genPG()">Refresh</button>
+            <button onclick="doExport()">📄 Export .pg</button>
+            <button onclick="doCopy()">📋 Copy</button>
+            <button onclick="doSaveImg()">🖼️ PNG</button>
+            <button onclick="document.getElementById('pg-out').value=genPG()">🔄 Refresh</button>
         </div>
     </div>
 
     <div id="alert-area"></div>
 
     <script>
-        // ── Constants ──────────────────────────────────────────────────
+        // ============================================
+        // CONSTANTS & GLOBALS
+        // ============================================
         const BASE_W = 200, BASE_H = 300;
         let W = BASE_W, H = BASE_H;
         let targetPx = null;
@@ -541,202 +521,163 @@
         let rateT = { n: 0, t: performance.now() };
         let fitHist = [];
         let raf = null;
+        let startTime = null;
+        let frameCount = 0;
 
-        // Multi-image support
+        // Image Queue
         let imageQueue = [];
         let currentImageIndex = 0;
-        let autoSwitchTimer = null;
 
+        // Canvas
         const cvWork = document.createElement('canvas');
         const ctxWork = cvWork.getContext('2d');
-        const cvT = document.getElementById('cvt'), ctxT = cvT.getContext('2d');
-        const cvE = document.getElementById('cve'), ctxE = cvE.getContext('2d');
-        const cvD = document.getElementById('cvd'), ctxD = cvD.getContext('2d');
-        const crv = document.getElementById('crv'), crvCtx = crv.getContext('2d');
-        const DS = 2; // display scale
+        const cvT = document.getElementById('cvt');
+        const ctxT = cvT.getContext('2d');
+        const cvE = document.getElementById('cve');
+        const ctxE = cvE.getContext('2d');
+        const cvD = document.getElementById('cvd');
+        const ctxD = cvD.getContext('2d');
+        const crv = document.getElementById('crv');
+        const crvCtx = crv.getContext('2d');
+        const DS = 2;
 
-        // ── Toggle evolved panel ───────────────────────────────────────
-        document.getElementById('toggleEvolvedCheckbox').addEventListener('change', function(e) {
-            const panel = document.getElementById('evolvedPanel');
-            panel.style.display = e.target.checked ? 'flex' : 'none';
-        });
+        // ============================================
+        // TOGGLE EVOLVED PANEL
+        // ============================================
+        function toggleEvolved() {
+            const panel = document.getElementById('evolved-panel');
+            const btn = document.getElementById('toggleEvolved');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'flex';
+                btn.textContent = '👁️ Hide Evolved';
+                localStorage.setItem('evolvedVisible', 'true');
+            } else {
+                panel.style.display = 'none';
+                btn.textContent = '👁️ Show Evolved';
+                localStorage.setItem('evolvedVisible', 'false');
+            }
+        }
 
-        // ── Multi-image loading ────────────────────────────────────────
-        function loadMultipleImages(files) {
-            const maxImages = 5;
-            const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
-            
-            if (fileArray.length > maxImages) {
-                alert(`Maximum ${maxImages} images allowed. Only first ${maxImages} will be used.`);
-                fileArray.length = maxImages;
+        // Load preference
+        const savedVisibility = localStorage.getItem('evolvedVisible');
+        if (savedVisibility === 'false') {
+            document.getElementById('evolved-panel').style.display = 'none';
+            document.getElementById('toggleEvolved').textContent = '👁️ Show Evolved';
+        }
+
+        // ============================================
+        // IMAGE QUEUE HANDLING
+        // ============================================
+        function updateQueueDisplay() {
+            const queueDiv = document.getElementById('imageQueue');
+            const thumbnailsDiv = document.getElementById('queueThumbnails');
+            const countSpan = document.getElementById('queueCount');
+            const batchBtn = document.getElementById('batchProcessBtn');
+
+            if (imageQueue.length > 0) {
+                queueDiv.style.display = 'block';
+                countSpan.textContent = `${imageQueue.length}/5`;
+                
+                thumbnailsDiv.innerHTML = '';
+                imageQueue.forEach((img, index) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = img.src;
+                    thumb.className = 'queue-thumb';
+                    thumb.title = img.name;
+                    thumb.onclick = () => {
+                        // Load this image as target
+                        loadImageFromElement(img);
+                    };
+                    thumbnailsDiv.appendChild(thumb);
+                });
+
+                batchBtn.style.display = 'inline-block';
+                batchBtn.textContent = `▶ Process All (${imageQueue.length})`;
+            } else {
+                queueDiv.style.display = 'none';
+                batchBtn.style.display = 'none';
+            }
+        }
+
+        function addToQueue(file) {
+            if (imageQueue.length >= 5) {
+                alert('Maximum 5 images allowed');
+                return false;
             }
 
-            imageQueue = [];
-            
-            let loadedCount = 0;
-            fileArray.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        imageQueue[index] = {
-                            img: img,
-                            name: file.name,
-                            data: null
-                        };
-                        loadedCount++;
-                        
-                        // Create thumbnail
-                        createThumbnail(img, index);
-                        
-                        if (loadedCount === fileArray.length) {
-                            // All images loaded
-                            document.getElementById('imageCountDisplay').textContent = 
-                                `${imageQueue.length}/5 images loaded`;
-                            document.getElementById('thumbnails').classList.remove('hidden');
-                            document.getElementById('multiSelector').style.display = 'flex';
-                            document.getElementById('totalImages').textContent = imageQueue.length;
-                            
-                            // Load first image
-                            loadImageFromQueue(0);
-                        }
-                    };
-                    img.src = e.target.result;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    img.name = file.name;
+                    imageQueue.push(img);
+                    updateQueueDisplay();
+                    showAlert(`✅ Added: ${file.name}`);
                 };
-                reader.readAsDataURL(file);
-            });
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            return true;
         }
 
-        function createThumbnail(img, index) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 50;
-            canvas.height = 50;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, 50, 50);
-            
-            const thumb = document.createElement('img');
-            thumb.src = canvas.toDataURL();
-            thumb.className = 'thumbnail';
-            thumb.dataset.index = index;
-            thumb.onclick = () => loadImageFromQueue(index);
-            
-            document.getElementById('thumbnails').appendChild(thumb);
-            updateActiveThumbnail(index);
-        }
-
-        function updateActiveThumbnail(index) {
-            document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
-                if (i === index) {
-                    thumb.classList.add('active');
-                } else {
-                    thumb.classList.remove('active');
-                }
-            });
-            document.getElementById('currentImageIndex').textContent = index + 1;
-        }
-
-        function loadImageFromQueue(index) {
-            if (!imageQueue[index]) return;
-            
-            currentImageIndex = index;
-            const img = imageQueue[index].img;
-            
-            // Calculate dimensions
+        function loadImageFromElement(img) {
             const ratio = img.height / img.width;
             W = BASE_W;
             H = Math.max(40, Math.round(W * ratio));
             if (H > 360) { H = 360; W = Math.round(H / ratio); }
-            
+
             cvWork.width = W;
             cvWork.height = H;
             ctxWork.drawImage(img, 0, 0, W, H);
             targetPx = new Uint8ClampedArray(ctxWork.getImageData(0, 0, W, H).data);
-            
-            const dw = W * DS, dh = H * DS;
+
+            const dw = W * DS;
+            const dh = H * DS;
             [cvT, cvE, cvD].forEach(c => { c.width = dw; c.height = dh; });
             ctxT.drawImage(cvWork, 0, 0, dw, dh);
-            
+
             document.getElementById('bstart').disabled = false;
             document.getElementById('breset').disabled = false;
-            
-            updateActiveThumbnail(index);
-            
-            // Update navigation buttons
-            document.getElementById('prevImageBtn').disabled = index === 0;
-            document.getElementById('nextImageBtn').disabled = index === imageQueue.length - 1;
+            document.getElementById('bstep').disabled = false;
             
             doReset();
-            
-            showAlert(`Loaded: ${imageQueue[index].name}`);
+            showAlert(`🎯 Loaded: ${img.name || 'image'}`);
         }
 
-        function nextImage() {
-            if (currentImageIndex < imageQueue.length - 1) {
-                loadImageFromQueue(currentImageIndex + 1);
+        async function processBatch() {
+            if (imageQueue.length === 0) return;
+            
+            showAlert(`🔄 Processing ${imageQueue.length} images...`);
+            
+            for (let i = 0; i < imageQueue.length; i++) {
+                currentImageIndex = i;
+                loadImageFromElement(imageQueue[i]);
+                
+                // Wait for evolution to make progress
+                await new Promise(resolve => {
+                    const checkProgress = setInterval(() => {
+                        if (gen > 100) { // After 100 generations, move to next
+                            clearInterval(checkProgress);
+                            resolve();
+                        }
+                    }, 100);
+                });
             }
-        }
-
-        function prevImage() {
-            if (currentImageIndex > 0) {
-                loadImageFromQueue(currentImageIndex - 1);
-            }
-        }
-
-        // Auto-switch timer
-        function startAutoSwitch() {
-            if (autoSwitchTimer) clearInterval(autoSwitchTimer);
             
-            const seconds = parseInt(document.getElementById('autoSwitchTime').value);
-            if (seconds === 0) return;
-            
-            autoSwitchTimer = setInterval(() => {
-                if (imageQueue.length > 0 && !running) {
-                    // Only switch if not evolving
-                    nextImage();
-                }
-            }, seconds * 1000);
+            showAlert('✅ Batch processing complete!');
         }
 
-        document.getElementById('autoSwitchTime').addEventListener('change', startAutoSwitch);
-        document.getElementById('prevImageBtn').addEventListener('click', prevImage);
-        document.getElementById('nextImageBtn').addEventListener('click', nextImage);
-
-        // ── Original PIGMENT code continues ───────────────────────────
-        function loadFile(f) {
-            // Handle single file (legacy)
-            const r = new FileReader();
-            r.onload = e => loadURL(e.target.result);
-            r.readAsDataURL(f);
-        }
-
-        function loadURL(url) {
-            const img = new Image();
-            img.onload = () => {
-                const ratio = img.height / img.width;
-                W = BASE_W;
-                H = Math.max(40, Math.round(W * ratio));
-                if (H > 360) { H = 360; W = Math.round(H / ratio); }
-                cvWork.width = W; cvWork.height = H;
-                ctxWork.drawImage(img, 0, 0, W, H);
-                targetPx = new Uint8ClampedArray(ctxWork.getImageData(0, 0, W, H).data);
-                const dw = W * DS, dh = H * DS;
-                [cvT, cvE, cvD].forEach(c => { c.width = dw; c.height = dh; });
-                ctxT.drawImage(cvWork, 0, 0, dw, dh);
-                document.getElementById('dropzone').style.display = 'none';
-                document.getElementById('bstart').disabled = false;
-                document.getElementById('breset').disabled = false;
-                doReset();
-            };
-            img.src = url;
-        }
-
-        // ── Genome ─────────────────────────────────────────────────────
+        // ============================================
+        // CORE EVOLUTION FUNCTIONS
+        // ============================================
         function rPoly() {
             const sz = W * (0.05 + Math.random() * parseFloat(document.getElementById('rsize').value) * 0.06);
-            const cx = Math.random() * W, cy = Math.random() * H;
+            const cx = Math.random() * W;
+            const cy = Math.random() * H;
             const pts = [];
             for (let i = 0; i < 3; i++) {
-                const a = (i / 3) * Math.PI * 2 + Math.random() * 1.2, r = sz * (0.4 + Math.random() * 0.9);
+                const a = (i / 3) * Math.PI * 2 + Math.random() * 1.2;
+                const r = sz * (0.4 + Math.random() * 0.9);
                 pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
             }
             return { pts, r: Math.random() * 255 | 0, g: Math.random() * 255 | 0, b: Math.random() * 255 | 0, a: (20 + Math.random() * 100) | 0 };
@@ -767,9 +708,9 @@
             } else if (c < 0.78) {
                 q.a = Math.max(6, Math.min(165, q.a + gauss(10 * mr) | 0));
             } else if (c < 0.90) {
-                const sc = 0.82 + Math.random() * 0.40,
-                    cx = q.pts.reduce((s, p) => s + p[0], 0) / q.pts.length,
-                    cy = q.pts.reduce((s, p) => s + p[1], 0) / q.pts.length;
+                const sc = 0.82 + Math.random() * 0.40;
+                const cx = q.pts.reduce((s, p) => s + p[0], 0) / q.pts.length;
+                const cy = q.pts.reduce((s, p) => s + p[1], 0) / q.pts.length;
                 q.pts = q.pts.map(([x, y]) => clp(cx + (x - cx) * sc, cy + (y - cy) * sc));
             } else {
                 return rPoly();
@@ -777,7 +718,6 @@
             return q;
         }
 
-        // ── Render ─────────────────────────────────────────────────────
         function render(ps, ctx, w, h) {
             ctx.clearRect(0, 0, w, h);
             ctx.fillStyle = '#fff';
@@ -792,7 +732,6 @@
             }
         }
 
-        // ── Fitness ─────────────────────────────────────────────────────
         function calcErr(id) {
             const d = id.data, t = targetPx;
             let e = 0;
@@ -807,7 +746,6 @@
             return Math.max(0, 100 * (1 - e / (255 * 255 * 3 * W * H)));
         }
 
-        // ── Evolution ──────────────────────────────────────────────────
         function evolveStep() {
             const pc = parseInt(document.getElementById('selpoly').value);
             const sp = parseInt(document.getElementById('selspd').value);
@@ -837,24 +775,23 @@
             }
         }
 
-        let fc = 0;
-
         function frame() {
             if (!running || paused) { raf = null; return; }
             evolveStep();
-            fc++;
-            if (fc % 4 === 0) updateDisplay();
+            frameCount++;
+            if (frameCount % 4 === 0) updateDisplay();
             raf = requestAnimationFrame(frame);
         }
 
         function updateDisplay() {
+            if (!targetPx) return;
+            
             cvWork.width = W;
             cvWork.height = H;
             render(bestPolys, ctxWork, W, H);
             const dw = W * DS, dh = H * DS;
             ctxE.drawImage(cvWork, 0, 0, dw, dh);
-            
-            // Diff
+
             const ev = ctxWork.getImageData(0, 0, W, H);
             const diff = ctxD.createImageData(W, H);
             for (let i = 0; i < ev.data.length; i += 4) {
@@ -868,25 +805,34 @@
             tmp.height = H;
             tmp.getContext('2d').putImageData(diff, 0, 0);
             ctxD.drawImage(tmp, 0, 0, dw, dh);
-            
-            // Stats
+
             const fp = fitPct(bestErr);
             document.getElementById('sg').textContent = gen.toLocaleString();
             document.getElementById('sf').textContent = fp.toFixed(2) + '%';
             document.getElementById('si').textContent = impr.toLocaleString();
             document.getElementById('sm').textContent = mutRate.toFixed(3);
-            
+
+            if (startTime) {
+                const elapsed = (performance.now() - startTime) / 1000;
+                const mins = Math.floor(elapsed / 60);
+                const secs = Math.floor(elapsed % 60);
+                document.getElementById('stime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
             const now = performance.now(), dt = (now - rateT.t) / 1000;
             if (dt > 0.5) {
                 document.getElementById('sr').textContent = (rateT.n / dt | 0) + '/s';
                 rateT = { n: 0, t: now };
             }
-            
+
             fitHist.push(fp);
             if (fitHist.length > 300) fitHist.shift();
             drawCurve();
-            
-            if (impr > 0 && impr % 3000 === 0) document.getElementById('pg-out').value = genPG();
+
+            // Update progress bar
+            document.getElementById('progressFill').style.width = fp + '%';
+
+            if (impr > 0 && impr % 1000 === 0) document.getElementById('pg-out').value = genPG();
         }
 
         function drawCurve() {
@@ -898,37 +844,40 @@
             crvCtx.lineWidth = 1.5;
             crvCtx.beginPath();
             for (let i = 0; i < fitHist.length; i++) {
-                const x = (i / (fitHist.length - 1)) * cw,
-                    y = ch - ((fitHist[i] - mn) / rng) * (ch - 4) - 2;
+                const x = (i / (fitHist.length - 1)) * cw;
+                const y = ch - ((fitHist[i] - mn) / rng) * (ch - 10) - 5;
                 i === 0 ? crvCtx.moveTo(x, y) : crvCtx.lineTo(x, y);
             }
             crvCtx.stroke();
             crvCtx.fillStyle = '#3a3828';
             crvCtx.font = '10px Courier New';
             crvCtx.fillText(mx.toFixed(1) + '%', 4, 11);
-            crvCtx.fillText(mn.toFixed(1) + '%', 4, ch - 3);
+            crvCtx.fillText(mn.toFixed(1) + '%', 4, ch - 8);
         }
 
-        // ── Controls ───────────────────────────────────────────────────
+        // ============================================
+        // CONTROLS
+        // ============================================
         function doStart() {
             if (!targetPx) return;
             running = true;
             paused = false;
+            startTime = startTime || performance.now();
             document.getElementById('bstart').disabled = true;
             document.getElementById('bpause').disabled = false;
             if (!raf) raf = requestAnimationFrame(frame);
-            
-            // Stop auto-switch when evolving
-            if (autoSwitchTimer) {
-                clearInterval(autoSwitchTimer);
-                autoSwitchTimer = null;
-            }
         }
 
         function doPause() {
             paused = !paused;
             document.getElementById('bpause').textContent = paused ? '▶ Resume' : '⏸ Pause';
             if (!paused && !raf) raf = requestAnimationFrame(frame);
+        }
+
+        function doStep() {
+            if (!targetPx || !paused) return;
+            evolveStep();
+            updateDisplay();
         }
 
         function doReset() {
@@ -938,38 +887,41 @@
             }
             running = false;
             paused = false;
-            
+            startTime = null;
+
             const pc = parseInt(document.getElementById('selpoly').value);
             polys = Array.from({ length: pc }, () => rPoly());
             bestPolys = polys.map(p => ({ ...p, pts: p.pts.map(pt => [...pt]) }));
-            
+
             cvWork.width = W;
             cvWork.height = H;
             render(bestPolys, ctxWork, W, H);
             bestErr = calcErr(ctxWork.getImageData(0, 0, W, H));
-            
+
             gen = 0;
             impr = 0;
             mutRate = 1.0;
             fitHist = [];
             rateT = { n: 0, t: performance.now() };
-            
+
             document.getElementById('bstart').disabled = false;
             document.getElementById('bpause').disabled = true;
             document.getElementById('bpause').textContent = '⏸ Pause';
             document.getElementById('pg-out').value = '';
-            
+
             updateDisplay();
         }
 
-        // ── Genome export ──────────────────────────────────────────────
+        // ============================================
+        // GENOME EXPORT
+        // ============================================
         function genPG() {
             const fp = fitPct(bestErr);
             const lines = [
                 `-- PIGMENT v3 Evolutionary Genome`,
                 `-- Gen: ${gen.toLocaleString()}  Fitness: ${fp.toFixed(2)}%  Polygons: ${bestPolys.length}`,
                 `-- Algorithm: Roger Alsing hill-climbing mutation`, ``,
-                `canvas { format: portrait  title: "Evolved Painting"  artist: "PIGMENT v3 Evolutionary Engine"  date: "${new Date().getFullYear()}" }`, ``,
+                `canvas { format: portrait  title: "Evolved Painting"  artist: "PIGMENT v3"  date: "${new Date().getFullYear()}" }`, ``,
                 `palette {`,
             ];
             const step = Math.max(1, bestPolys.length / 16 | 0);
@@ -1018,17 +970,26 @@
             a.click();
         }
 
-        // ── File drop ──────────────────────────────────────────────────
-        document.getElementById('fi').onchange = e => {
-            if (e.target.files.length > 0) {
-                if (e.target.files.length === 1) {
-                    // Single file - use original method
-                    loadFile(e.target.files[0]);
-                } else {
-                    // Multiple files - use multi-image loader
-                    loadMultipleImages(e.target.files);
-                }
+        function showAlert(msg) {
+            const alertArea = document.getElementById('alert-area');
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            alertArea.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        document.getElementById('fi').onchange = (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 5) {
+                alert('Maximum 5 images allowed');
+                return;
             }
+            imageQueue = [];
+            files.forEach(f => addToQueue(f));
         };
 
         const dz = document.getElementById('dropzone');
@@ -1036,131 +997,29 @@
             e.preventDefault();
             dz.classList.add('over');
         });
-
         dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-
         dz.addEventListener('drop', e => {
             e.preventDefault();
             dz.classList.remove('over');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                if (files.length === 1 && files[0].type.startsWith('image/')) {
-                    loadFile(files[0]);
-                } else if (files.length > 1) {
-                    // Check if all are images
-                    const allImages = Array.from(files).every(f => f.type.startsWith('image/'));
-                    if (allImages) {
-                        loadMultipleImages(files);
-                    } else {
-                        alert('Please drop only image files');
-                    }
-                }
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 5) {
+                alert('Maximum 5 images allowed');
+                return;
             }
+            imageQueue = [];
+            files.forEach(f => addToQueue(f));
         });
 
-        // PG file drop
-        const pgdz = document.getElementById('pgLoader');
-        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
-        pgdz.addEventListener('dragover', e => {
-            e.preventDefault();
-            pgdz.classList.add('over');
+        document.getElementById('batchProcessBtn').addEventListener('click', processBatch);
+        document.getElementById('clearQueueBtn').addEventListener('click', () => {
+            imageQueue = [];
+            updateQueueDisplay();
         });
-        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
-        pgdz.addEventListener('drop', e => {
-            e.preventDefault();
-            pgdz.classList.remove('over');
-            const f = e.dataTransfer.files[0];
-            if (f && f.name.endsWith('.pg')) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    try {
-                        parsePG(e.target.result);
-                        showAlert('✅ .pg genome loaded!');
-                    } catch (err) {
-                        showAlert('❌ Failed to parse .pg file', 'error');
-                    }
-                };
-                reader.readAsText(f);
-            }
-        });
-
-        document.getElementById('pgFile').onchange = e => {
-            if (e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    try {
-                        parsePG(e.target.result);
-                        showAlert('✅ .pg genome loaded!');
-                    } catch (err) {
-                        showAlert('❌ Failed to parse .pg file', 'error');
-                    }
-                };
-                reader.readAsText(e.target.files[0]);
-            }
-        };
-
-        // Simple PG parser (minimal version)
-        function parsePG(content) {
-            // Extract polygons
-            const polyBlocks = content.match(/poly-\d+\s*{[^}]*}/g);
-            if (polyBlocks) {
-                const newPolys = [];
-                polyBlocks.forEach(block => {
-                    const pointsMatch = block.match(/points:\s*([\d.,\-\s]+)/);
-                    const colorMatch = block.match(/color:\s*rgba?\(([^)]+)\)/);
-                    
-                    if (pointsMatch && colorMatch) {
-                        const pts = pointsMatch[1].trim().split(/\s+/).map(p => 
-                            p.split(',').map(Number)
-                        );
-                        const rgba = colorMatch[1].split(',').map(Number);
-                        
-                        newPolys.push({
-                            pts: pts,
-                            r: Math.round(rgba[0] || 0),
-                            g: Math.round(rgba[1] || 0),
-                            b: Math.round(rgba[2] || 0),
-                            a: Math.round((rgba[3] || 1) * 255)
-                        });
-                    }
-                });
-                
-                if (newPolys.length > 0) {
-                    bestPolys = newPolys;
-                    bestErr = calcErr(renderToData(bestPolys));
-                    updateDisplay();
-                    showAlert(`Loaded ${newPolys.length} polygons from .pg`);
-                }
-            }
-        }
-
-        function renderToData(ps) {
-            const canvas = document.createElement('canvas');
-            canvas.width = W;
-            canvas.height = H;
-            const ctx = canvas.getContext('2d');
-            render(ps, ctx, W, H);
-            return ctx.getImageData(0, 0, W, H);
-        }
-
-        function showAlert(msg, type = 'info') {
-            const alertArea = document.getElementById('alert-area');
-            const alert = document.createElement('div');
-            alert.className = 'alert';
-            alert.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            alertArea.appendChild(alert);
-            
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-            }, 5000);
-        }
 
         // Curve resize
         function rCrv() {
-            crv.width = document.getElementById('crv').parentElement.clientWidth || 460;
-            crv.height = 72;
+            crv.width = Math.min(800, window.innerWidth - 30);
+            crv.height = 80;
             drawCurve();
         }
         rCrv();
