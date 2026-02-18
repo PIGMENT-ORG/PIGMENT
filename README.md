@@ -12,7 +12,7 @@ Just open `index.html` in a modern browser. No build step required.
 2. Press **▶ START**
 3. Watch polygons evolve to match your image!
 
-**Live Demo:** [https://your-username.github.io/pigment](https://your-username.github.io/pigment)
+**Live Demo:** [https://pigment-org.github.io/PIGMENT](https://pigment-org.github.io/PIGMENT)
 
 ---
 
