@@ -1,101 +1,28 @@
-// Supabase Client for PIGMENT
 const SupabaseClient = {
     url: null,
     anonKey: null,
     enabled: false,
     sessionId: null,
+    callCount: 0,
     
-    // Initialize with your Supabase credentials
     init(config) {
-        this.url = config.url
-        this.anonKey = config.anonKey
-        this.enabled = !!(this.url && this.anonKey)
-        this.sessionId = crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now()
+        this.url = config.url;
+        this.anonKey = config.anonKey;
+        this.enabled = !!(this.url && this.anonKey);
+        this.sessionId = crypto.randomUUID ? crypto.randomUUID() : 'session-' + Date.now();
+        
+        // Reset counter daily
+        setInterval(() => { this.callCount = 0; }, 86400000);
         
         if (this.enabled) {
-            console.log('✅ Supabase ML backend enabled')
-        } else {
-            console.log('⚠️ Supabase ML backend disabled (no credentials)')
+            console.log('✅ Supabase ML backend enabled');
         }
-        
-        return this
+        return this;
     },
     
-    // Generate embedding from image data
-    async generateEmbedding(imageData, text = null) {
-        if (!this.enabled) return null
-        
-        try {
-            const response = await fetch(`${this.url}/functions/v1/generate-embedding`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.anonKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    imageBase64: imageData,
-                    text: text
-                })
-            })
-            
-            const data = await response.json()
-            return data.embedding
-        } catch (err) {
-            console.error('Embedding generation failed:', err)
-            return null
-        }
-    },
-    
-    // Select mutation using RL
-    async selectMutation(state) {
-        if (!this.enabled) return { action: 'random', source: 'local' }
-        
-        try {
-            const response = await fetch(`${this.url}/functions/v1/select-mutation`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.anonKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    mode: 'select',
-                    state: state
-                })
-            })
-            return await response.json()
-        } catch (err) {
-            console.error('RL selection failed:', err)
-            return { action: 'random', source: 'local' }
-        }
-    },
-    
-    // Update RL with reward
-    async updateRL(state, action, reward, nextState) {
-        if (!this.enabled) return
-        
-        try {
-            await fetch(`${this.url}/functions/v1/select-mutation`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.anonKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    mode: 'update',
-                    state: state,
-                    lastAction: action,
-                    reward: reward,
-                    nextState: nextState
-                })
-            })
-        } catch (err) {
-            console.error('RL update failed:', err)
-        }
-    },
-    
-    // Store evolution experience
-    async learnFromEvolution(evolutionData) {
-        if (!this.enabled) return
+    async batchLearn(records) {
+        if (!this.enabled || records.length === 0) return;
+        this.callCount++;
         
         try {
             await fetch(`${this.url}/functions/v1/learn-from-evolution`, {
@@ -104,94 +31,78 @@ const SupabaseClient = {
                     'Authorization': `Bearer ${this.anonKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    evolutionData: {
-                        ...evolutionData,
-                        sessionId: this.sessionId
-                    }
-                })
-            })
+                body: JSON.stringify({ evolutionData: records })
+            });
         } catch (err) {
-            console.error('Learning failed:', err)
+            console.error('Batch learn failed:', err);
         }
     },
     
-    // Search for similar evolutions
-    async semanticSearch(embedding, threshold = 0.7, limit = 10) {
-        if (!this.enabled) return []
+    async batchRLUpdate(updates) {
+        if (!this.enabled || updates.length === 0) return;
+        this.callCount++;
         
         try {
-            const response = await fetch(`${this.url}/functions/v1/semantic-search`, {
+            await fetch(`${this.url}/functions/v1/select-mutation`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.anonKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    embedding: embedding,
-                    threshold: threshold,
-                    limit: limit
-                })
-            })
-            
-            const data = await response.json()
-            return data.similar || []
+                body: JSON.stringify({ mode: 'batch', updates })
+            });
         } catch (err) {
-            console.error('Semantic search failed:', err)
-            return []
+            console.error('Batch RL update failed:', err);
         }
     },
     
-    // Predict aesthetic score
-    async predictAesthetic(features) {
-        if (!this.enabled) return 0.5
+    async selectMutation(state) {
+        if (!this.enabled) return { action: 'random', source: 'local' };
+        this.callCount++;
         
         try {
-            const response = await fetch(`${this.url}/functions/v1/aesthetic-predictor`, {
+            const response = await fetch(`${this.url}/functions/v1/select-mutation`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.anonKey}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    features: features
-                })
-            })
-            
-            const data = await response.json()
-            return data.aestheticScore || 0.5
+                body: JSON.stringify({ mode: 'select', state })
+            });
+            return await response.json();
         } catch (err) {
-            console.error('Aesthetic prediction failed:', err)
-            return 0.5
+            console.error('RL selection failed:', err);
+            return { action: 'random', source: 'local' };
         }
     },
     
-    // Submit user feedback
-    async submitFeedback(evolutionRunId, imageEmbeddingId, rating, comments = '') {
-        if (!this.enabled) return
+    async generateEmbedding(imageData) {
+        if (!this.enabled) return null;
+        this.callCount++;
         
         try {
-            const response = await fetch(`${this.url}/rest/v1/user_feedback`, {
+            const response = await fetch(`${this.url}/functions/v1/generate-embedding`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.anonKey}`,
-                    'apikey': this.anonKey,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    evolution_run_id: evolutionRunId,
-                    image_embedding_id: imageEmbeddingId,
-                    user_rating: rating,
-                    user_comments: comments,
-                    created_at: new Date().toISOString()
-                })
-            })
-            return response.ok
+                body: JSON.stringify({ imageBase64: imageData })
+            });
+            const data = await response.json();
+            return data.embedding;
         } catch (err) {
-            console.error('Feedback submission failed:', err)
-            return false
+            console.error('Embedding failed:', err);
+            return null;
         }
+    },
+    
+    getCallStats() {
+        return {
+            today: this.callCount,
+            monthly: this.callCount * 30 // estimate
+        };
     }
-}
+};
 
-window.SupabaseClient = SupabaseClient
+window.SupabaseClient = SupabaseClient;
