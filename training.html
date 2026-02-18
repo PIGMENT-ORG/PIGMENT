@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIGMENT v5 — Batch Training</title>
+    <title>PIGMENT v5 — REAL Batch Training</title>
     <style>
         * {
             margin: 0;
@@ -80,10 +80,6 @@
             background: #1a2818;
             border-color: #a0c080;
             color: #d8f0c0;
-        }
-
-        button.primary:hover {
-            background: #2a3828;
         }
 
         button:disabled {
@@ -241,13 +237,13 @@
 <body>
     <a href="index.html" class="back-btn">← BACK</a>
 
-    <h1>🧠 PIGMENT v5 BATCH TRAINING</h1>
-    <div class="v5-badge" id="trainingHeader">📊 LOADING SUPABASE STATUS...</div>
+    <h1>🧠 PIGMENT v5 REAL BATCH TRAINING</h1>
+    <div class="v5-badge" id="trainingHeader">📊 CONNECTED TO SUPABASE · REAL EVOLUTION</div>
 
     <div id="dropzone">
         <div style="font-size:3em; margin-bottom:10px">🖼️</div>
         <div><strong>Drop multiple images here</strong> or click to select</div>
-        <div style="font-size:0.8em; margin-top:8px;">Each image will write 500 samples to Supabase</div>
+        <div style="font-size:0.8em; margin-top:8px;">Each image will be FULLY evolved (500 real generations)</div>
     </div>
     <input type="file" id="fileInput" multiple accept="image/*" hidden>
 
@@ -305,7 +301,7 @@
         const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-        class TrainingQueue {
+        class RealTrainingQueue {
             constructor() {
                 this.items = [];
                 this.currentIndex = -1;
@@ -313,6 +309,8 @@
                 this.isPaused = false;
                 this.startTime = null;
                 this.processedCount = 0;
+                this.initialSamples = 0;
+                this.initialQstates = 0;
             }
 
             async refreshSupabaseStats() {
@@ -327,16 +325,28 @@
                     });
                     const qstates = await qRes.json();
 
+                    if (this.initialSamples === 0) {
+                        this.initialSamples = samples.length;
+                        this.initialQstates = qstates.length;
+                    }
+
                     document.getElementById('statSamples').textContent = samples.length.toLocaleString();
                     document.getElementById('statQstates').textContent = qstates.length;
+                    
+                    const samplesGain = samples.length - this.initialSamples;
+                    const qGain = qstates.length - this.initialQstates;
+                    
+                    document.getElementById('samplesTrend').textContent = `+${samplesGain} this session`;
+                    document.getElementById('qTrend').textContent = `+${qGain}`;
+                    
                     document.getElementById('trainingHeader').innerHTML = 
-                        `📊 ${samples.length.toLocaleString()} samples · ${qstates.length} Q-states`;
+                        `📊 ${samples.length.toLocaleString()} samples · ${qstates.length} Q-states · REAL`;
                     
                     document.getElementById('lastUpdate').textContent = 
                         `Last sync: ${new Date().toLocaleTimeString()}`;
 
                 } catch (e) {
-                    console.log('Using fallback stats');
+                    console.log('Error fetching stats:', e);
                 }
             }
 
@@ -349,7 +359,8 @@
                             file: file,
                             status: 'pending',
                             progress: 0,
-                            fitness: 0
+                            fitness: 0,
+                            generations: 0
                         });
                     }
                 });
@@ -367,7 +378,6 @@
                     const div = document.createElement('div');
                     div.className = 'queue-item';
                     
-                    // Simple B&W detection based on name (demo)
                     if (item.name.toLowerCase().includes('bw') || item.name.includes('B&W')) {
                         bwCount++;
                     } else {
@@ -378,7 +388,7 @@
                         <div class="status-badge status-${item.status}">${item.status}</div>
                         <div style="flex:1; word-break:break-all;">${item.name}</div>
                         ${item.status === 'processing' ? 
-                            `<div style="width:60px;">${item.fitness.toFixed(1)}%</div>` : 
+                            `<div style="width:100px;">${item.fitness.toFixed(1)}% · ${item.generations}gen</div>` : 
                             item.status === 'completed' ? '<div>✓</div>' : ''}
                     `;
                     list.appendChild(div);
@@ -399,6 +409,8 @@
                 this.isPaused = false;
                 this.currentIndex = 0;
                 this.startTime = Date.now();
+
+                await this.refreshSupabaseStats(); // Get initial counts
 
                 document.getElementById('startBatch').disabled = true;
                 document.getElementById('pauseBatch').disabled = false;
@@ -421,17 +433,16 @@
                     this.renderQueue();
 
                     try {
-                        await this.processItem(item);
+                        // REAL EVOLUTION for this image
+                        await this.realEvolution(item);
                         item.status = 'completed';
                         this.processedCount++;
                         
-                        // Write to Supabase every 5 items
-                        if (this.processedCount % 5 === 0) {
-                            await this.refreshSupabaseStats();
-                        }
+                        // Refresh stats after each image
+                        await this.refreshSupabaseStats();
                         
                     } catch (e) {
-                        console.error('Failed:', e);
+                        console.error('Evolution failed:', e);
                         item.status = 'failed';
                     }
 
@@ -444,48 +455,93 @@
                 document.getElementById('pauseBatch').disabled = true;
                 document.getElementById('stopBatch').disabled = true;
                 document.getElementById('pauseBatch').innerHTML = '⏸ PAUSE';
-                
-                // Final refresh
-                await this.refreshSupabaseStats();
             }
 
-            async processItem(item) {
-                const steps = 20;
-                for (let i = 0; i <= steps; i++) {
-                    if (!this.isProcessing) throw new Error('Stopped');
-                    
-                    while (this.isPaused && this.isProcessing) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-
-                    item.progress = (i / steps) * 100;
-                    item.fitness = 80 + Math.random() * 15; // Simulate 80-95% fitness
-                    this.renderQueue();
-                    
-                    // Simulate work
-                    await new Promise(r => setTimeout(r, 50));
-
-                    // Write to Supabase at completion
-                    if (i === steps) {
-                        await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
-                            method: 'POST',
-                            headers: {
-                                'apikey': SUPABASE_ANON_KEY,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                operator_used: 'batch',
-                                mutation_success: true,
-                                offspring_fitness: item.fitness,
-                                style_category: 'general',
-                                metadata: {
-                                    image: item.name,
-                                    timestamp: new Date().toISOString()
+            async realEvolution(item) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = async () => {
+                            try {
+                                // Create canvas for target
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 200;
+                                canvas.height = 200;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, 200, 200);
+                                const imageData = ctx.getImageData(0, 0, 200, 200);
+                                
+                                // Initialize evolution engine for this image
+                                const evolution = EvolutionEngine.init({
+                                    width: 200,
+                                    height: 200,
+                                    targetData: imageData,
+                                    supabase: window.SupabaseClient
+                                });
+                                
+                                // Run REAL evolution (500 generations)
+                                const totalGens = 500;
+                                for (let gen = 0; gen < totalGens; gen++) {
+                                    if (!this.isProcessing) {
+                                        reject(new Error('Stopped'));
+                                        return;
+                                    }
+                                    
+                                    while (this.isPaused && this.isProcessing) {
+                                        await new Promise(r => setTimeout(r, 100));
+                                    }
+                                    
+                                    // One evolution step
+                                    const result = evolution.step();
+                                    
+                                    // Update progress every 25 gens
+                                    if (gen % 25 === 0) {
+                                        item.progress = (gen / totalGens) * 100;
+                                        item.fitness = result.fitness;
+                                        item.generations = gen;
+                                        this.renderQueue();
+                                    }
                                 }
-                            })
-                        });
-                    }
-                }
+                                
+                                // Get final fitness
+                                const finalStats = evolution.getStats();
+                                item.fitness = finalStats.fitness;
+                                item.generations = totalGens;
+                                
+                                // Write result to Supabase
+                                await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'apikey': SUPABASE_ANON_KEY,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        operator_used: 'batch_training',
+                                        mutation_success: finalStats.improvements > 0,
+                                        parent_fitness: 0,
+                                        offspring_fitness: finalStats.fitness,
+                                        style_category: 'general',
+                                        metadata: {
+                                            image: item.name,
+                                            generations: totalGens,
+                                            polygons: finalStats.polygons,
+                                            improvements: finalStats.improvements,
+                                            timestamp: new Date().toISOString()
+                                        }
+                                    })
+                                });
+                                
+                                resolve();
+                                
+                            } catch (err) {
+                                reject(err);
+                            }
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(item.file);
+                });
             }
 
             pauseProcessing() {
@@ -518,9 +574,8 @@
             }
         }
 
-        const queue = new TrainingQueue();
-
         // Initialize
+        const queue = new RealTrainingQueue();
         queue.refreshSupabaseStats();
         setInterval(() => queue.refreshSupabaseStats(), 30000);
 
@@ -535,7 +590,7 @@
         document.getElementById('dropzone').addEventListener('click', () => 
             document.getElementById('fileInput').click());
             
-        document.getElementById('dropzone').addEventListener('dragover', e => {
+        document.getElementById('dropzone').addEventListener('dragover', (e) => {
             e.preventDefault();
             document.getElementById('dropzone').classList.add('over');
         });
@@ -544,13 +599,13 @@
             document.getElementById('dropzone').classList.remove('over');
         });
         
-        document.getElementById('dropzone').addEventListener('drop', e => {
+        document.getElementById('dropzone').addEventListener('drop', (e) => {
             e.preventDefault();
             document.getElementById('dropzone').classList.remove('over');
             queue.addItems(e.dataTransfer.files);
         });
 
-        document.getElementById('fileInput').addEventListener('change', e => {
+        document.getElementById('fileInput').addEventListener('change', (e) => {
             queue.addItems(e.target.files);
         });
 
