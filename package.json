@@ -1,0 +1,16 @@
+{
+  "name": "pigment",
+  "version": "1.0.0",
+  "description": "**PIGMENT** is a browser-based evolutionary art system that uses genetic algorithms to recreate images using transparent polygons. It includes visual intelligence for face detection, symmetry analysis, skin tone detection, and edge-importance weighting, plus a full Supabase ML backend for reinforcement learning and semantic search.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

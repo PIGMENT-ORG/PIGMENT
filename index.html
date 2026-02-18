@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGMENT — Evolutionary Painter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>🎨 PIGMENT</h1>
+    <div class="sub">EVOLUTIONARY ART · MULTI-OBJECTIVE · SEMANTIC VISION</div>
+
+    <div id="dropzone">
+        <div class="drop-icon">🖼️</div>
+        <div><strong>Drop image here</strong> or click to browse</div>
+    </div>
+    <input type="file" id="fi" accept="image/*" hidden>
+
+    <div id="pgLoader">
+        <div class="drop-icon">🧬</div>
+        <div><strong>Load .pg genome</strong> or paste (Ctrl+V)</div>
+    </div>
+    <input type="file" id="pgFile" accept=".pg" hidden>
+
+    <div class="tab-panel" id="tabPanel">
+        <div class="tab active" data-tab="main">🎮 MAIN</div>
+        <div class="tab" data-tab="advanced">⚡ ADVANCED</div>
+        <div class="tab" data-tab="intelligence">🧠 INTELLIGENCE</div>
+        <div class="tab" data-tab="export">📤 EXPORT</div>
+    </div>
+
+    <div id="main-tab" class="tab-content active">
+        <div class="controls">
+            <button class="go" id="bstart" disabled>▶ START</button>
+            <button id="bpause" disabled>⏸ PAUSE</button>
+            <button id="breset" disabled>↺ RESET</button>
+            <button id="bstep" disabled>⏩ STEP</button>
+        </div>
+        <div class="controls">
+            <label>Polygons <select id="selpoly">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select></label>
+            <label>Speed <select id="selspd">
+                <option value="5">Slow (5)</option>
+                <option value="10">Medium (10)</option>
+                <option value="20" selected>Normal (20)</option>
+                <option value="30">Fast (30)</option>
+                <option value="40">Turbo (40)</option>
+            </select></label>
+            <label>Size <input type="range" id="rsize" min="2" max="10" value="4"></label>
+        </div>
+    </div>
+
+    <div id="advanced-tab" class="tab-content">
+        <div class="controls">
+            <label>Algorithm <select id="algorithm">
+                <option value="hill">Hill Climbing</option>
+                <option value="multi" selected>Multi-Objective</option>
+                <option value="novelty">Novelty Search</option>
+            </select></label>
+            <label>Mutation Rate <input type="range" id="mutRate" min="0.1" max="2" step="0.1" value="1.0"></label>
+            <label>Temperature <input type="range" id="temperature" min="0.1" max="2" value="1.0"></label>
+        </div>
+        <div class="controls">
+            <label class="checkbox"><input type="checkbox" id="showOutlines"> Show Outlines</label>
+            <label class="checkbox"><input type="checkbox" id="overlayDiff"> Diff Overlay</label>
+            <label class="checkbox"><input type="checkbox" id="sizePenalty" checked> Size Penalty</label>
+            <label class="checkbox"><input type="checkbox" id="edgeWeight" checked> Edge Weighting</label>
+        </div>
+    </div>
+
+    <div id="intelligence-tab" class="tab-content">
+        <div class="controls">
+            <label class="checkbox"><input type="checkbox" id="useFaceDetect" checked> Face Detection</label>
+            <label class="checkbox"><input type="checkbox" id="useSymmetry" checked> Symmetry Analysis</label>
+            <label class="checkbox"><input type="checkbox" id="useSkinTone" checked> Skin Tone</label>
+            <label class="checkbox"><input type="checkbox" id="useEdges" checked> Edge Importance</label>
+        </div>
+        <div class="stats-mini">
+            <div>Face Score: <span id="faceScore">0.00</span></div>
+            <div>Symmetry: <span id="symScore">0.00</span></div>
+            <div>Skin Regions: <span id="skinScore">0%</span></div>
+        </div>
+    </div>
+
+    <div id="export-tab" class="tab-content">
+        <div class="controls">
+            <button id="exportPG">📄 Export .pg</button>
+            <button id="copyGenome">📋 Copy</button>
+            <button id="savePNG">🖼️ PNG</button>
+            <button id="saveJPG">📸 JPG</button>
+            <button id="saveSVG">📐 SVG</button>
+        </div>
+        <div class="controls">
+            <label>Resolution <select id="exportScale">
+                <option value="1">1× (200px)</option>
+                <option value="2" selected>2× (400px)</option>
+                <option value="4">4× (800px)</option>
+                <option value="8">8× (1600px)</option>
+                <option value="16">16× (3200px)</option>
+            </select></label>
+            <label class="checkbox"><input type="checkbox" id="embedMeta"> Embed Stats</label>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="panel"><div class="plabel">🎯 TARGET</div><canvas id="cvt" width="200" height="200"></canvas></div>
+        <div class="panel"><div class="plabel">🧬 EVOLVED</div><canvas id="cve" width="200" height="200"></canvas></div>
+        <div class="panel"><div class="plabel">📊 DIFF</div><canvas id="cvd" width="200" height="200"></canvas></div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-item"><span class="sv" id="sg">0</span><span class="sl">GENERATIONS</span></div>
+        <div class="stat-item"><span class="sv" id="sf">0.00%</span><span class="sl">PIXEL</span></div>
+        <div class="stat-item"><span class="sv" id="ss">0.00</span><span class="sl">STRUCTURE</span></div>
+        <div class="stat-item"><span class="sv" id="si">0</span><span class="sl">IMPROVEMENTS</span></div>
+        <div class="stat-item"><span class="sv" id="sr">0/s</span><span class="sl">SPEED</span></div>
+        <div class="stat-item"><span class="sv" id="stime">0:00</span><span class="sl">TIME</span></div>
+        <div class="stat-item"><span class="sv" id="seta">--:--</span><span class="sl">ETA</span></div>
+        <div class="stat-item"><span class="sv" id="speak">0%</span><span class="sl">PEAK</span></div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <canvas id="crv"></canvas>
+
+    <div class="expbox">
+        <h3>🧬 CURRENT GENOME</h3>
+        <textarea id="pg-out" readonly placeholder="Genome will appear here..."></textarea>
+    </div>
+
+    <div id="alert-area"></div>
+
+    <script src="js/utils/geometry.js"></script>
+    <script src="js/utils/color-utils.js"></script>
+    <script src="js/utils/image-utils.js"></script>
+    <script src="js/utils/performance.js"></script>
+    <script src="js/intelligence/face-detector.js"></script>
+    <script src="js/intelligence/symmetry-analyzer.js"></script>
+    <script src="js/intelligence/skin-tone-detector.js"></script>
+    <script src="js/intelligence/edge-importance.js"></script>
+    <script src="js/intelligence/composition-rules.js"></script>
+    <script src="js/intelligence/visual-intelligence.js"></script>
+    <script src="js/mutations/base-mutation.js"></script>
+    <script src="js/mutations/translate-mutation.js"></script>
+    <script src="js/mutations/scale-mutation.js"></script>
+    <script src="js/mutations/rotate-mutation.js"></script>
+    <script src="js/mutations/color-mutation.js"></script>
+    <script src="js/mutations/opacity-mutation.js"></script>
+    <script src="js/mutations/intelligent-mutation.js"></script>
+    <script src="js/mutations/index.js"></script>
+    <script src="js/fitness/pixel-fitness.js"></script>
+    <script src="js/fitness/structural-fitness.js"></script>
+    <script src="js/fitness/semantic-fitness.js"></script>
+    <script src="js/fitness/multi-objective.js"></script>
+    <script src="js/export/pg-exporter.js"></script>
+    <script src="js/export/pg-parser.js"></script>
+    <script src="js/export/image-exporter.js"></script>
+    <script src="js/ui/controls.js"></script>
+    <script src="js/ui/stats-display.js"></script>
+    <script src="js/ui/progress-bar.js"></script>
+    <script src="js/ui/fitness-curve.js"></script>
+    <script src="js/ui/alert-system.js"></script>
+    <script src="js/core/canvas-manager.js"></script>
+    <script src="js/core/evolution-engine.js"></script>
+    <script src="js/core/pigment.js"></script>
+    <script>
+        // Wire up drop zones and file inputs
+        const dz = document.getElementById('dropzone');
+        dz.addEventListener('click', () => document.getElementById('fi').click());
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault(); dz.classList.remove('over');
+            if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadImage(e.dataTransfer.files[0]);
+        });
+        const pgdz = document.getElementById('pgLoader');
+        pgdz.addEventListener('click', () => document.getElementById('pgFile').click());
+        pgdz.addEventListener('dragover', e => { e.preventDefault(); pgdz.classList.add('over'); });
+        pgdz.addEventListener('dragleave', () => pgdz.classList.remove('over'));
+        pgdz.addEventListener('drop', e => {
+            e.preventDefault(); pgdz.classList.remove('over');
+            if (e.dataTransfer.files[0] && window.Pigment) Pigment.loadPG(e.dataTransfer.files[0]);
+        });
+    </script>
+</body>
+</html>

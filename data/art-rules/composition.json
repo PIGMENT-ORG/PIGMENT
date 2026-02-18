@@ -1,0 +1,62 @@
+{
+  "description": "Art composition rules for evolutionary painting",
+  "version": "1.0",
+  "rules": {
+    "ruleOfThirds": {
+      "enabled": true,
+      "weight": 1.0,
+      "points": [
+        {
+          "x": 0.333,
+          "y": 0.333
+        },
+        {
+          "x": 0.667,
+          "y": 0.333
+        },
+        {
+          "x": 0.333,
+          "y": 0.667
+        },
+        {
+          "x": 0.667,
+          "y": 0.667
+        }
+      ]
+    },
+    "goldenRatio": {
+      "enabled": true,
+      "weight": 1.2,
+      "ratio": 1.618,
+      "points": [
+        {
+          "x": 0.382,
+          "y": 0.382
+        },
+        {
+          "x": 0.618,
+          "y": 0.382
+        },
+        {
+          "x": 0.382,
+          "y": 0.618
+        },
+        {
+          "x": 0.618,
+          "y": 0.618
+        }
+      ]
+    },
+    "balance": {
+      "enabled": true,
+      "weight": 0.8,
+      "idealCenterX": 0.5,
+      "idealCenterY": 0.4
+    },
+    "symmetry": {
+      "enabled": true,
+      "weight": 1.0,
+      "axis": "vertical"
+    }
+  }
+}

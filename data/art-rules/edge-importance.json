@@ -1,0 +1,23 @@
+{
+  "description": "Edge importance weights by facial region",
+  "version": "1.0",
+  "weights": {
+    "eyeContour": 3.5,
+    "pupil": 4.0,
+    "iris": 3.8,
+    "eyebrow": 3.0,
+    "noseBridge": 2.0,
+    "nostril": 2.5,
+    "lipOutline": 3.0,
+    "lipCenter": 2.5,
+    "jawline": 2.8,
+    "hairline": 2.0,
+    "earOutline": 1.5,
+    "background": 0.3
+  },
+  "regionMultipliers": {
+    "upper": 1.2,
+    "center": 1.5,
+    "lower": 1.0
+  }
+}

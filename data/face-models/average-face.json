@@ -1,0 +1,40 @@
+{
+  "description": "Average face proportions for detection",
+  "version": "1.0",
+  "features": {
+    "leftEye": {
+      "x": 0.38,
+      "y": 0.38,
+      "radiusX": 0.06,
+      "radiusY": 0.04
+    },
+    "rightEye": {
+      "x": 0.62,
+      "y": 0.38,
+      "radiusX": 0.06,
+      "radiusY": 0.04
+    },
+    "nose": {
+      "x": 0.5,
+      "y": 0.55,
+      "width": 0.12,
+      "height": 0.14
+    },
+    "mouth": {
+      "x": 0.5,
+      "y": 0.72,
+      "width": 0.18,
+      "height": 0.06
+    },
+    "chin": {
+      "x": 0.5,
+      "y": 0.88
+    }
+  },
+  "proportions": {
+    "eyeSpacing": 0.24,
+    "eyeToNose": 0.17,
+    "noseToMouth": 0.14,
+    "mouthToChin": 0.16
+  }
+}

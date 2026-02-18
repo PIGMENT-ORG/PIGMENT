@@ -1,0 +1,121 @@
+{
+  "description": "Skin tone database with HSV ranges",
+  "version": "1.0",
+  "tones": [
+    {
+      "name": "light",
+      "displayName": "Light",
+      "hsv": {
+        "h": [
+          0,
+          25
+        ],
+        "s": [
+          0.15,
+          0.45
+        ],
+        "v": [
+          0.7,
+          0.95
+        ]
+      },
+      "rgbSample": [
+        245,
+        210,
+        185
+      ]
+    },
+    {
+      "name": "medium-light",
+      "displayName": "Medium Light",
+      "hsv": {
+        "h": [
+          15,
+          35
+        ],
+        "s": [
+          0.25,
+          0.5
+        ],
+        "v": [
+          0.6,
+          0.85
+        ]
+      },
+      "rgbSample": [
+        220,
+        175,
+        145
+      ]
+    },
+    {
+      "name": "medium",
+      "displayName": "Medium",
+      "hsv": {
+        "h": [
+          20,
+          40
+        ],
+        "s": [
+          0.35,
+          0.6
+        ],
+        "v": [
+          0.5,
+          0.75
+        ]
+      },
+      "rgbSample": [
+        185,
+        140,
+        110
+      ]
+    },
+    {
+      "name": "medium-dark",
+      "displayName": "Medium Dark",
+      "hsv": {
+        "h": [
+          20,
+          40
+        ],
+        "s": [
+          0.4,
+          0.65
+        ],
+        "v": [
+          0.35,
+          0.6
+        ]
+      },
+      "rgbSample": [
+        145,
+        105,
+        80
+      ]
+    },
+    {
+      "name": "dark",
+      "displayName": "Dark",
+      "hsv": {
+        "h": [
+          10,
+          30
+        ],
+        "s": [
+          0.5,
+          0.8
+        ],
+        "v": [
+          0.15,
+          0.45
+        ]
+      },
+      "rgbSample": [
+        95,
+        65,
+        50
+      ]
+    }
+  ]
+}

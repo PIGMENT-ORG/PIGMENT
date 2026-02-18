@@ -1,0 +1,77 @@
+{
+  "description": "Color harmony rules for polygon coloring",
+  "version": "1.0",
+  "harmonies": {
+    "complementary": {
+      "description": "Colors opposite on the color wheel",
+      "angle": 180
+    },
+    "analogous": {
+      "description": "Colors adjacent on the wheel",
+      "angles": [
+        -30,
+        0,
+        30
+      ]
+    },
+    "triadic": {
+      "description": "Three evenly spaced colors",
+      "angles": [
+        0,
+        120,
+        240
+      ]
+    },
+    "tetradic": {
+      "description": "Four colors forming a rectangle",
+      "angles": [
+        0,
+        90,
+        180,
+        270
+      ]
+    }
+  },
+  "skinToneHarmonies": {
+    "warm": {
+      "baseHue": 25,
+      "palette": [
+        [
+          245,
+          210,
+          185
+        ],
+        [
+          220,
+          175,
+          145
+        ],
+        [
+          185,
+          140,
+          110
+        ]
+      ]
+    },
+    "cool": {
+      "baseHue": 200,
+      "palette": [
+        [
+          180,
+          200,
+          220
+        ],
+        [
+          140,
+          160,
+          185
+        ],
+        [
+          100,
+          120,
+          150
+        ]
+      ]
+    }
+  }
+}
