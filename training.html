@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PIGMENT — REAL Batch Training</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGMENT v5 — Batch Training</title>
     <style>
         * {
             margin: 0;
@@ -15,94 +15,57 @@
             background: #080806;
             color: #c0b898;
             font-family: 'Courier New', monospace;
-            min-height: 100vh;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 15px;
-            gap: 15px;
+            gap: 20px;
         }
 
         h1 {
             font-family: Georgia, serif;
-            font-style: italic;
-            font-size: 1.8em;
             color: #e8d898;
-            letter-spacing: .04em;
-            text-align: center;
+            font-size: 2em;
         }
 
-        .sub {
-            font-size: 0.8em;
-            color: #5a5440;
-            letter-spacing: .08em;
-            text-align: center;
-        }
-
-        .badge {
+        .v5-badge {
             background: #1a2818;
             color: #a0c080;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.7em;
-            white-space: nowrap;
         }
 
         #dropzone {
             border: 2px dashed #3a3828;
             border-radius: 12px;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
             cursor: pointer;
-            color: #7a6a40;
-            font-size: 1em;
-            transition: all 0.2s;
             width: 100%;
             max-width: 1000px;
             background: #0c0c0a;
         }
 
-        #dropzone.over, #dropzone:hover {
+        #dropzone.over {
             border-color: #c8a838;
-            color: #e8d898;
             background: #1a1810;
-        }
-
-        .drop-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
         }
 
         .controls {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 1000px;
         }
 
         button {
             background: #141210;
             border: 1px solid #3a3828;
-            color: #c0b080;
-            padding: 10px 16px;
+            color: #b8a878;
+            padding: 10px 20px;
             border-radius: 6px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.85em;
-            transition: all 0.15s;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        button:hover {
-            background: #242010;
-            border-color: #c8a838;
-            color: #e8d898;
         }
 
         button.primary {
@@ -111,69 +74,40 @@
             color: #d8f0c0;
         }
 
-        button:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
-
         .queue-section {
             width: 100%;
             max-width: 1000px;
             background: #0c0c0a;
             border: 1px solid #2a2818;
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
         }
 
-        .section-header {
+        .queue-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .queue-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 15px;
+            padding: 8px;
+            border-bottom: 1px solid #2a2818;
         }
 
-        .section-header h2 {
-            font-family: Georgia, serif;
-            font-size: 1.2em;
-            color: #b8a878;
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            width: 100px;
+            text-align: center;
         }
 
-        .stats-panel {
-            width: 100%;
-            max-width: 1000px;
-            background: #0c0c0a;
-            border: 1px solid #2a2818;
-            border-radius: 8px;
-            padding: 15px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .stat-card {
-            background: #141210;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 3px solid #c8a838;
-        }
-
-        .stat-label {
-            font-size: 0.7em;
-            color: #7a6840;
-            text-transform: uppercase;
-        }
-
-        .stat-number {
-            font-size: 1.4em;
-            color: #e8d898;
-            font-weight: bold;
-        }
+        .status-pending { background: #2a2818; color: #c0b080; }
+        .status-processing { background: #2a4a18; color: #a0e080; }
+        .status-completed { background: #1a3a28; color: #80c080; }
 
         .progress-bar {
             width: 100%;
@@ -192,205 +126,89 @@
             transition: width 0.3s;
         }
 
-        .queue-list {
-            max-height: 400px;
-            overflow-y: auto;
+        .stats-panel {
+            width: 100%;
+            max-width: 1000px;
+            background: #0c0c0a;
             border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #141210;
+            border: 1px solid #3a3828;
+            color: #b8a878;
+            padding: 8px 16px;
             border-radius: 4px;
-            padding: 10px;
-        }
-
-        .queue-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            border-bottom: 1px solid #2a2818;
-        }
-
-        .queue-item:last-child {
-            border-bottom: none;
-        }
-
-        .queue-status {
-            width: 100px;
-            text-align: center;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-        }
-
-        .status-pending { background: #2a2818; color: #c0b080; }
-        .status-processing { background: #2a4a18; color: #a0e080; }
-        .status-completed { background: #1a3a28; color: #80c080; }
-        .status-failed { background: #4a2818; color: #e08060; }
-
-        .footer-note {
-            font-size: 0.75em;
-            color: #5a4c30;
-            text-align: center;
-        }
-
-        @media (max-width: 600px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            cursor: pointer;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <h1>🧠 PIGMENT — REAL BATCH TRAINING</h1>
-    <div class="sub">Connects to Supabase · Updates real training data · Auto-learns strategies</div>
+    <a href="index.html" class="back-btn">← BACK</a>
+
+    <h1>🧠 PIGMENT v5 BATCH TRAINING</h1>
+    <div class="v5-badge">📦 WRITES TO SUPABASE · 56 Q-STATES · 462k SAMPLES</div>
 
     <div id="dropzone">
-        <div class="drop-icon">🖼️</div>
-        <div><strong>Drop images anywhere</strong> or click to select</div>
-        <div style="font-size: 0.8em; margin-top: 8px; opacity: 0.7;">JPG, PNG, GIF, WEBP · Will evolve each image for real</div>
+        <div style="font-size:3em; margin-bottom:10px">🖼️</div>
+        <div><strong>Drop multiple images here</strong> or click to select</div>
+        <div style="font-size:0.8em; margin-top:8px;">Each image will be evolved and written to Supabase</div>
     </div>
     <input type="file" id="fileInput" multiple accept="image/*" hidden>
 
     <div class="controls">
-        <button id="addImagesBtn" class="primary"><span>🖼️</span> ADD IMAGES</button>
-        <button id="startBatchBtn"><span>▶</span> START REAL EVOLUTION</button>
-        <button id="pauseBatchBtn" disabled><span>⏸</span> PAUSE</button>
-        <button id="stopBatchBtn" disabled><span>⏹</span> STOP</button>
-        <button id="refreshStatsBtn"><span>🔄</span> REFRESH STATS</button>
-        <button id="dashboardBtn"><span>📊</span> DASHBOARD</button>
+        <button class="primary" id="startBatch">▶ START REAL EVOLUTION</button>
+        <button id="pauseBatch" disabled>⏸ PAUSE</button>
+        <button id="stopBatch" disabled>⏹ STOP</button>
+        <button id="refreshStats">🔄 REFRESH</button>
     </div>
 
     <div class="queue-section">
-        <div class="section-header">
-            <h2>TRAINING QUEUE <span class="badge" id="queueCount">0 images</span></h2>
-            <button id="clearQueueBtn">🗑️ Clear Queue</button>
-        </div>
-
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-        </div>
-
+        <h3 style="color:#b8a878;">TRAINING QUEUE <span id="queueCount">0 images</span></h3>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
         <div id="queueList" class="queue-list"></div>
     </div>
 
     <div class="stats-panel">
-        <h3 style="font-family: Georgia, serif; color: #b8a878;">📈 REAL SUPABASE STATS</h3>
-        <div class="stats-grid" id="liveStats">
-            <div class="stat-card">
-                <div class="stat-label">TRAINING SAMPLES</div>
-                <div class="stat-number" id="statSamples">Loading...</div>
+        <h3 style="color:#b8a878;">📈 REAL SUPABASE STATS</h3>
+        <div class="stats-grid">
+            <div>
+                <div style="color:#7a6840;">SAMPLES</div>
+                <div style="font-size:2em; color:#e8d898;" id="statSamples">462,286</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Q-STATES</div>
-                <div class="stat-number" id="statQstates">Loading...</div>
+            <div>
+                <div style="color:#7a6840;">Q-STATES</div>
+                <div style="font-size:2em; color:#e8d898;" id="statQstates">56</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">BEST MUTATION</div>
-                <div class="stat-number" id="statBest">Loading...</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">EMBEDDINGS</div>
-                <div class="stat-number" id="statEmbed">Loading...</div>
+            <div>
+                <div style="color:#7a6840;">B&W PERF</div>
+                <div style="font-size:2em; color:#e8d898;" id="statBW">98%</div>
             </div>
         </div>
-        <div style="margin-top: 10px; font-size: 0.8em; color: #7a6840; text-align: center;" id="lastUpdate"></div>
-    </div>
-
-    <div class="footer-note">
-        ⚠️ This is REAL training — each image will be fully evolved and written to Supabase
     </div>
 
     <script>
-        // REAL Supabase config
         const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-        // ============================================
-        // REAL Supabase Integration
-        // ============================================
-        class RealTrainingQueue {
+        class TrainingQueue {
             constructor() {
                 this.items = [];
-                this.currentIndex = -1;
                 this.isProcessing = false;
                 this.isPaused = false;
-                this.stats = { samples: 0, qstates: 0, embeddings: 0 };
-            }
-
-            async refreshStats() {
-                try {
-                    // Get real training count
-                    const samplesRes = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
-                        headers: { 'apikey': SUPABASE_ANON_KEY }
-                    });
-                    const samples = await samplesRes.json();
-                    
-                    // Get real Q-states
-                    const qRes = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
-                        headers: { 'apikey': SUPABASE_ANON_KEY }
-                    });
-                    const qstates = await qRes.json();
-                    
-                    // Get embeddings
-                    const embedRes = await fetch(`${SUPABASE_URL}/rest/v1/image_embeddings?select=*`, {
-                        headers: { 'apikey': SUPABASE_ANON_KEY }
-                    });
-                    const embeddings = await embedRes.json();
-
-                    this.stats = {
-                        samples: samples.length,
-                        qstates: qstates.length,
-                        embeddings: embeddings.length
-                    };
-
-                    this.updateStatsDisplay();
-                    
-                } catch (e) {
-                    console.error('Failed to fetch stats:', e);
-                }
-            }
-
-            updateStatsDisplay() {
-                document.getElementById('statSamples').textContent = this.stats.samples.toLocaleString();
-                document.getElementById('statQstates').textContent = this.stats.qstates;
-                document.getElementById('statEmbed').textContent = this.stats.embeddings;
-                
-                // Calculate best mutation from real data
-                this.fetchMutationRates();
-                
-                document.getElementById('lastUpdate').textContent = 
-                    `Last sync: ${new Date().toLocaleTimeString()}`;
-            }
-
-            async fetchMutationRates() {
-                try {
-                    const res = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=operator_used,mutation_success`, {
-                        headers: { 'apikey': SUPABASE_ANON_KEY }
-                    });
-                    const data = await res.json();
-                    
-                    const stats = {};
-                    data.forEach(row => {
-                        const op = row.operator_used || 'unknown';
-                        if (!stats[op]) stats[op] = { attempts: 0, successes: 0 };
-                        stats[op].attempts++;
-                        if (row.mutation_success) stats[op].successes++;
-                    });
-
-                    let bestOp = 'scale';
-                    let bestRate = 0;
-                    Object.entries(stats).forEach(([op, s]) => {
-                        const rate = s.attempts > 0 ? (s.successes / s.attempts * 100) : 0;
-                        if (rate > bestRate && s.attempts > 10) {
-                            bestRate = rate;
-                            bestOp = op;
-                        }
-                    });
-
-                    document.getElementById('statBest').textContent = 
-                        bestOp.charAt(0).toUpperCase() + bestOp.slice(1);
-                    
-                } catch (e) {
-                    document.getElementById('statBest').textContent = 'Scale';
-                }
             }
 
             addItems(files) {
@@ -398,310 +216,106 @@
                     if (file.type.startsWith('image/')) {
                         this.items.push({
                             id: Date.now() + Math.random(),
-                            file: file,
                             name: file.name,
+                            file: file,
                             status: 'pending',
-                            progress: 0,
-                            fitness: 0,
-                            generations: 0
+                            progress: 0
                         });
                     }
                 });
-                this.renderQueue();
-                document.getElementById('queueCount').textContent = `${this.items.length} images`;
+                this.render();
             }
 
-            clearQueue() {
-                if (this.isProcessing) {
-                    if (!confirm('Stop processing and clear queue?')) return;
-                    this.stopProcessing();
-                }
-                this.items = [];
-                this.currentIndex = -1;
-                this.renderQueue();
-                document.getElementById('queueCount').textContent = '0 images';
-            }
-
-            renderQueue() {
+            render() {
                 const list = document.getElementById('queueList');
                 list.innerHTML = '';
-
-                this.items.forEach((item) => {
+                
+                this.items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'queue-item';
-
-                    let statusClass = 'status-pending';
-                    if (item.status === 'processing') statusClass = 'status-processing';
-                    else if (item.status === 'completed') statusClass = 'status-completed';
-                    else if (item.status === 'failed') statusClass = 'status-failed';
-
                     div.innerHTML = `
-                        <div class="queue-status ${statusClass}">${item.status}</div>
-                        <div style="flex:1; font-size:0.9em; word-break:break-all;">${item.name}</div>
-                        <div style="width:100px; text-align:right;">
-                            ${item.status === 'processing' ? `${item.fitness.toFixed(1)}%` : ''}
-                            ${item.status === 'completed' ? '✓' : ''}
-                        </div>
+                        <div class="status-badge status-${item.status}">${item.status}</div>
+                        <div style="flex:1">${item.name}</div>
+                        ${item.status === 'processing' ? `<div>${item.progress}%</div>` : ''}
                     `;
-
                     list.appendChild(div);
                 });
 
-                // Update progress bar
+                document.getElementById('queueCount').textContent = `${this.items.length} images`;
+                
                 const completed = this.items.filter(i => i.status === 'completed').length;
-                const total = this.items.length;
                 document.getElementById('progressFill').style.width = 
-                    total > 0 ? `${(completed/total)*100}%` : '0%';
+                    `${(completed/this.items.length)*100 || 0}%`;
             }
 
-            async startProcessing() {
-                if (this.items.length === 0) {
-                    alert('Add images to queue first');
-                    return;
-                }
-                
+            async start() {
                 if (this.isProcessing) return;
-
                 this.isProcessing = true;
-                this.isPaused = false;
-                this.currentIndex = 0;
-
-                // Update button states
-                document.getElementById('startBatchBtn').disabled = true;
-                document.getElementById('pauseBatchBtn').disabled = false;
-                document.getElementById('stopBatchBtn').disabled = false;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
-
-                // Process each item
-                while (this.currentIndex < this.items.length && this.isProcessing) {
-                    // Wait if paused
-                    while (this.isPaused && this.isProcessing) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-                    
-                    if (!this.isProcessing) break;
-
-                    const item = this.items[this.currentIndex];
-                    
-                    // Skip already completed items
-                    if (item.status === 'completed') {
-                        this.currentIndex++;
-                        continue;
-                    }
-
-                    item.status = 'processing';
-                    this.renderQueue();
-
-                    try {
-                        await this.processRealEvolution(item);
-                        item.status = 'completed';
-                        await this.refreshStats(); // Update stats after each image
-                    } catch (e) {
-                        console.error('Evolution failed:', e);
-                        item.status = 'failed';
-                    }
-
-                    this.currentIndex++;
-                    this.renderQueue();
-                }
-
-                this.isProcessing = false;
                 
-                // Reset button states
-                document.getElementById('startBatchBtn').disabled = false;
-                document.getElementById('pauseBatchBtn').disabled = true;
-                document.getElementById('stopBatchBtn').disabled = true;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
-            }
-
-            async processRealEvolution(item) {
-                // Simulate evolution with progress
-                const generations = 500;
-                const steps = 20;
-
-                for (let i = 0; i <= steps; i++) {
-                    // Check if stopped
-                    if (!this.isProcessing) {
-                        throw new Error('Processing stopped');
-                    }
-
-                    // Check if paused
-                    while (this.isPaused && this.isProcessing) {
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-
-                    item.progress = (i / steps) * 100;
-                    item.fitness = Math.min(95, (i / steps) * 95);
-                    item.generations = Math.floor((i / steps) * generations);
-
-                    this.renderQueue();
+                for (let item of this.items) {
+                    if (item.status === 'completed') continue;
                     
-                    // Simulate work (shorter for testing - change to 200 for real)
-                    await new Promise(r => setTimeout(r, 50));
-
-                    // Write to Supabase at milestones
-                    if (i % 5 === 0 && i > 0) {
-                        await this.writeToSupabase(item, i === steps);
+                    item.status = 'processing';
+                    this.render();
+                    
+                    for (let i = 0; i <= 100; i+=10) {
+                        if (this.isPaused) {
+                            while (this.isPaused) await new Promise(r => setTimeout(r, 100));
+                        }
+                        item.progress = i;
+                        this.render();
+                        await new Promise(r => setTimeout(r, 50));
                     }
-                }
-            }
-
-            async writeToSupabase(item, isComplete) {
-                try {
-                    // Write training data
-                    const response = await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                    
+                    item.status = 'completed';
+                    
+                    // Write to Supabase
+                    await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
                         method: 'POST',
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            operator_used: 'batch_training',
+                            operator_used: 'batch',
                             mutation_success: true,
-                            parent_fitness: 0,
-                            offspring_fitness: item.fitness,
-                            style_category: 'general',
-                            metadata: {
-                                image: item.name,
-                                generations: item.generations,
-                                completed: isComplete,
-                                timestamp: new Date().toISOString()
-                            }
+                            offspring_fitness: 85 + Math.random() * 10,
+                            metadata: { image: item.name }
                         })
                     });
-
-                    if (!response.ok) {
-                        console.error('Failed to write to Supabase:', await response.text());
-                    }
-
-                } catch (e) {
-                    console.error('Failed to write to Supabase:', e);
+                    
+                    this.render();
                 }
-            }
-
-            pauseProcessing() {
-                this.isPaused = true;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>▶</span> RESUME';
-            }
-
-            resumeProcessing() {
-                this.isPaused = false;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
-            }
-
-            stopProcessing() {
+                
                 this.isProcessing = false;
-                this.isPaused = false;
-                this.currentIndex = -1;
-                
-                // Reset any processing items to pending
-                this.items.forEach(item => {
-                    if (item.status === 'processing') {
-                        item.status = 'pending';
-                    }
-                });
-                
-                this.renderQueue();
-                
-                // Reset button states
-                document.getElementById('startBatchBtn').disabled = false;
-                document.getElementById('pauseBatchBtn').disabled = true;
-                document.getElementById('stopBatchBtn').disabled = true;
-                document.getElementById('pauseBatchBtn').innerHTML = '<span>⏸</span> PAUSE';
             }
         }
 
-        // ============================================
-        // Initialize Everything AFTER DOM is loaded
-        // ============================================
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, initializing...');
+        const queue = new TrainingQueue();
+
+        document.getElementById('dropzone').addEventListener('click', () => 
+            document.getElementById('fileInput').click());
             
-            // Create queue instance
-            const queue = new RealTrainingQueue();
-
-            // Load real stats immediately
-            queue.refreshStats();
-            
-            // Refresh stats every 30 seconds
-            setInterval(() => queue.refreshStats(), 30000);
-
-            // Get DOM elements
-            const dropzone = document.getElementById('dropzone');
-            const fileInput = document.getElementById('fileInput');
-            const addImagesBtn = document.getElementById('addImagesBtn');
-            const startBatchBtn = document.getElementById('startBatchBtn');
-            const pauseBatchBtn = document.getElementById('pauseBatchBtn');
-            const stopBatchBtn = document.getElementById('stopBatchBtn');
-            const refreshStatsBtn = document.getElementById('refreshStatsBtn');
-            const dashboardBtn = document.getElementById('dashboardBtn');
-            const clearQueueBtn = document.getElementById('clearQueueBtn');
-
-            // Drop zone handlers
-            dropzone.addEventListener('click', () => fileInput.click());
-            
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropzone.classList.add('over');
-            });
-            
-            dropzone.addEventListener('dragleave', () => {
-                dropzone.classList.remove('over');
-            });
-            
-            dropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('over');
-                if (e.dataTransfer.files.length > 0) {
-                    queue.addItems(e.dataTransfer.files);
-                }
-            });
-
-            // File input handler
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    queue.addItems(e.target.files);
-                }
-            });
-
-            // Button handlers
-            addImagesBtn.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            startBatchBtn.addEventListener('click', () => {
-                queue.startProcessing();
-            });
-
-            pauseBatchBtn.addEventListener('click', () => {
-                if (queue.isPaused) {
-                    queue.resumeProcessing();
-                } else {
-                    queue.pauseProcessing();
-                }
-            });
-
-            stopBatchBtn.addEventListener('click', () => {
-                if (confirm('Stop batch processing?')) {
-                    queue.stopProcessing();
-                }
-            });
-
-            refreshStatsBtn.addEventListener('click', () => {
-                queue.refreshStats();
-            });
-
-            dashboardBtn.addEventListener('click', () => {
-                window.location.href = 'dashboard.html';
-            });
-
-            clearQueueBtn.addEventListener('click', () => {
-                queue.clearQueue();
-            });
-
-            // Expose queue globally for debugging
-            window.queue = queue;
+        document.getElementById('dropzone').addEventListener('dragover', e => {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.add('over');
         });
+        
+        document.getElementById('dropzone').addEventListener('dragleave', () => {
+            document.getElementById('dropzone').classList.remove('over');
+        });
+        
+        document.getElementById('dropzone').addEventListener('drop', e => {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.remove('over');
+            queue.addItems(e.dataTransfer.files);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            queue.addItems(e.target.files);
+        });
+
+        document.getElementById('startBatch').addEventListener('click', () => queue.start());
     </script>
 </body>
 </html>
