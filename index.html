@@ -410,8 +410,8 @@
     <script src="js/export/pg-exporter.js"></script>
     <script src="js/ui/stats-display.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/core/evolution-engine.js"></script>
     <script src="js/core/canvas-manager.js"></script>
+    <script src="js/core/evolution-engine.js"></script>
     <script src="js/core/pigment.js"></script>
 
     <script>
@@ -503,137 +503,137 @@
         document.getElementById('exportPG')?.addEventListener('click', () => Pigment?.exportPG());
 
         // ============================================
-        // DROP ZONE HANDLERS - 100% WORKING
+        // IMAGE LOADING — LOAD NOW, NOTIFY LATER
         // ============================================
-        function setupDropZones() {
-            console.log('Setting up drop zones...');
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fi');
+        const pgLoader = document.getElementById('pgLoader');
+        const pgFile = document.getElementById('pgFile');
+
+        // Image drop zone
+        if (dropzone) {
+            dropzone.addEventListener('click', () => fileInput?.click());
             
-            // Helper to wait for Pigment
-            const waitForPigment = (callback) => {
-                if (window.Pigment) {
-                    callback();
-                } else {
-                    setTimeout(() => waitForPigment(callback), 100);
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('over');
+            });
+            
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('over');
+            });
+            
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('over');
+                
+                const file = e.dataTransfer.files[0];
+                if (!file || !file.type.startsWith('image/')) {
+                    alert('Please drop an image file');
+                    return;
                 }
-            };
-
-            // Image drop zone
-            const dropzone = document.getElementById('dropzone');
-            const fileInput = document.getElementById('fi');
-            
-            if (dropzone) {
-                // Remove old listeners by cloning
-                const newDropzone = dropzone.cloneNode(true);
-                dropzone.parentNode.replaceChild(newDropzone, dropzone);
                 
-                newDropzone.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    fileInput?.click();
-                });
-                
-                newDropzone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    newDropzone.classList.add('over');
-                });
-                
-                newDropzone.addEventListener('dragleave', () => {
-                    newDropzone.classList.remove('over');
-                });
-                
-                newDropzone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    newDropzone.classList.remove('over');
-                    
-                    const file = e.dataTransfer.files[0];
-                    if (!file) {
-                        alert('No file dropped');
-                        return;
-                    }
-                    
-                    if (!file.type.startsWith('image/')) {
-                        alert('Please drop an image file (JPEG, PNG, GIF)');
-                        return;
-                    }
-                    
-                    console.log('Image dropped:', file.name);
-                    waitForPigment(() => window.Pigment.loadImage(file));
-                });
-                
-                console.log('✓ Image drop zone ready');
-            }
-            
-            // File input handler
-            if (fileInput) {
-                const newFileInput = fileInput.cloneNode(true);
-                fileInput.parentNode.replaceChild(newFileInput, fileInput);
-                
-                newFileInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        waitForPigment(() => window.Pigment.loadImage(file));
-                    }
-                });
-            }
-
-            // PG loader drop zone
-            const pgLoader = document.getElementById('pgLoader');
-            const pgFile = document.getElementById('pgFile');
-            
-            if (pgLoader) {
-                const newPgLoader = pgLoader.cloneNode(true);
-                pgLoader.parentNode.replaceChild(newPgLoader, pgLoader);
-                
-                newPgLoader.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    pgFile?.click();
-                });
-                
-                newPgLoader.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    newPgLoader.classList.add('over');
-                });
-                
-                newPgLoader.addEventListener('dragleave', () => {
-                    newPgLoader.classList.remove('over');
-                });
-                
-                newPgLoader.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    newPgLoader.classList.remove('over');
-                    
-                    const file = e.dataTransfer.files[0];
-                    if (!file) return;
-                    
-                    if (!file.name.endsWith('.pg')) {
-                        alert('Please drop a .pg genome file');
-                        return;
-                    }
-                    
-                    console.log('PG dropped:', file.name);
-                    waitForPigment(() => window.Pigment.loadPG(file));
-                });
-                
-                console.log('✓ PG loader ready');
-            }
-            
-            if (pgFile) {
-                const newPgFile = pgFile.cloneNode(true);
-                pgFile.parentNode.replaceChild(newPgFile, pgFile);
-                
-                newPgFile.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        waitForPigment(() => window.Pigment.loadPG(file));
-                    }
-                });
-            }
+                // LOAD IMAGE IMMEDIATELY — NO WAITING!
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Draw to canvas NOW — user sees it immediately
+                        const canvas = document.getElementById('cvt');
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Enable start button
+                        document.getElementById('bstart').disabled = false;
+                        
+                        // OPTIONALLY notify Pigment if it exists
+                        if (window.Pigment?.setTargetImage) {
+                            window.Pigment.setTargetImage(img);
+                        }
+                        
+                        console.log('✅ Image loaded successfully:', file.name);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
-        // Run setup when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupDropZones);
-        } else {
-            setupDropZones();
+        // File input handler
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('cvt');
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        document.getElementById('bstart').disabled = false;
+                        
+                        if (window.Pigment?.setTargetImage) {
+                            window.Pigment.setTargetImage(img);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // PG loader drop zone
+        if (pgLoader) {
+            pgLoader.addEventListener('click', () => pgFile?.click());
+            
+            pgLoader.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                pgLoader.classList.add('over');
+            });
+            
+            pgLoader.addEventListener('dragleave', () => {
+                pgLoader.classList.remove('over');
+            });
+            
+            pgLoader.addEventListener('drop', (e) => {
+                e.preventDefault();
+                pgLoader.classList.remove('over');
+                
+                const file = e.dataTransfer.files[0];
+                if (!file || !file.name.endsWith('.pg')) {
+                    alert('Please drop a .pg genome file');
+                    return;
+                }
+                
+                // Load PG file
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    if (window.Pigment?.loadPGString) {
+                        window.Pigment.loadPGString(content);
+                    } else {
+                        alert('PG loader not ready');
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        if (pgFile) {
+            pgFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (window.Pigment?.loadPGString) {
+                        window.Pigment.loadPGString(e.target.result);
+                    }
+                };
+                reader.readAsText(file);
+            });
         }
 
         // Start periodic updates
