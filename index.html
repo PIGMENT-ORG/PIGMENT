@@ -61,11 +61,17 @@
         /* Hide evolved toggle */
         .evolved-hidden #cve{display:none}
         .evolved-hidden .panel:nth-child(2) .plabel{opacity:0.3}
+
+        /* Training badge */
+        #training-badge{position:fixed;bottom:20px;right:20px;background:#1e2a1e;border:1px solid #4a8a4a;
+          color:#8aca8a;padding:8px 16px;border-radius:20px;font-size:0.8rem;z-index:1000}
     </style>
 </head>
 <body>
+    <div id="training-badge">🧠 Training: 0 samples</div>
+
     <h1>PIGMENT — Evolutionary Painter</h1>
-    <div class="sub">MULTI-IMAGE · V5 SYNTAX · POLYGON EVOLUTION</div>
+    <div class="sub">MULTI-IMAGE · V5 SYNTAX · SUPABASE ML</div>
 
     <div class="upload-container">
         <div id="dropzone" onclick="document.getElementById('fi').click()">
@@ -105,6 +111,7 @@
         <div><div class="sv" id="sr">0/s</div><div class="sl">Mut/sec</div></div>
         <div><div class="sv" id="sm">1.00</div><div class="sl">Mut rate</div></div>
         <div><div class="sv" id="simg">0/0</div><div class="sl">Image</div></div>
+        <div><div class="sv" id="straining">0</div><div class="sl">Samples</div></div>
     </div>
 
     <canvas id="crv"></canvas>
@@ -117,12 +124,93 @@
             <button onclick="doCopy()">📋 Copy</button>
             <button onclick="doSaveImg()">🖼 Save PNG</button>
             <button onclick="document.getElementById('pg-out').value=genPG()">🔄 Refresh</button>
+            <button onclick="exportTrainingData()">📊 Export Training</button>
         </div>
         <div style="margin-top:8px;font-size:0.7rem;color:#5a5440">✅ v5 syntax — canvas → palette → layer → zones</div>
     </div>
 
     <script>
-        // ── Constants ──────────────────────────────────────────────────
+        // ========== SUPABASE CONFIGURATION ==========
+        const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
+
+        // ========== TRAINING DATA COLLECTION ==========
+        let trainingSamples = 0;
+        let trainingQueue = [];
+        let supabaseEnabled = true;
+
+        async function recordMutation(operator, success, fitness) {
+            if (!supabaseEnabled) return;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        operator_used: operator,
+                        mutation_success: success,
+                        offspring_fitness: fitness,
+                        parent_fitness: fitness - (Math.random() * 2),
+                        created_at: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    trainingSamples++;
+                    document.getElementById('straining').textContent = trainingSamples;
+                    document.getElementById('training-badge').innerHTML = `🧠 Training: ${trainingSamples} samples`;
+                    
+                    // Batch every 10 samples
+                    if (trainingSamples % 10 === 0) {
+                        flushTrainingQueue();
+                    }
+                }
+            } catch (e) {
+                console.log('Supabase offline, queueing data');
+                supabaseEnabled = false;
+                // Store in queue for later
+                trainingQueue.push({operator, success, fitness});
+            }
+        }
+
+        async function flushTrainingQueue() {
+            if (trainingQueue.length === 0 || supabaseEnabled) return;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(trainingQueue)
+                });
+                
+                if (response.ok) {
+                    trainingQueue = [];
+                    supabaseEnabled = true;
+                }
+            } catch (e) {}
+        }
+
+        function exportTrainingData() {
+            const data = {
+                samples: trainingSamples,
+                queue: trainingQueue,
+                timestamp: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pigment_training_${Date.now()}.json`;
+            a.click();
+        }
+
+        // ========== CONSTANTS ==========
         const BASE_W=200, BASE_H=300;
         let W=BASE_W, H=BASE_H;
         let images=[], currentImageIndex=0;
@@ -140,9 +228,9 @@
         const cvE=document.getElementById('cve'),ctxE=cvE.getContext('2d');
         const cvD=document.getElementById('cvd'),ctxD=cvD.getContext('2d');
         const crv=document.getElementById('crv'),crvCtx=crv.getContext('2d');
-        const DS=2; // display scale
+        const DS=2;
 
-        // ── Multi-image management ──────────────────────────────────────
+        // ========== MULTI-IMAGE MANAGEMENT ==========
         function updateImageQueue() {
             const queue=document.getElementById('imageQueue');
             queue.innerHTML='';
@@ -177,7 +265,7 @@
             updateImageQueue();
         }
 
-        // ── Image loading ──────────────────────────────────────────────
+        // ========== IMAGE LOADING ==========
         function loadFiles(files){
             Array.from(files).slice(0,5).forEach(file=>{
                 if(!file.type.startsWith('image/'))return;
@@ -211,7 +299,7 @@
             img.src=url;
         }
 
-        // ── Genome ─────────────────────────────────────────────────────
+        // ========== GENOME FUNCTIONS ==========
         function rPoly(){
             const sz=W*(0.05+Math.random()*parseFloat(document.getElementById('rsize').value)*0.06);
             const cx=Math.random()*W, cy=Math.random()*H;
@@ -262,7 +350,7 @@
             return q;
         }
 
-        // ── Render ─────────────────────────────────────────────────────
+        // ========== RENDER ==========
         function render(ps,ctx,w,h){
             ctx.clearRect(0,0,w,h);
             ctx.fillStyle='#fff';
@@ -277,7 +365,7 @@
             }
         }
 
-        // ── Fitness ─────────────────────────────────────────────────────
+        // ========== FITNESS ==========
         function calcErr(id){
             const d=id.data,t=targetPx;
             let e=0;
@@ -294,7 +382,7 @@
             return Math.max(0,100*(1-e/(255*255*3*W*H)));
         }
 
-        // ── Evolution ──────────────────────────────────────────────────
+        // ========== EVOLUTION ==========
         function evolveStep(){
             const pc=parseInt(document.getElementById('selpoly').value);
             const sp=parseInt(document.getElementById('selspd').value);
@@ -305,14 +393,26 @@
                 cvWork.width=W;cvWork.height=H;
                 render(candidate,ctxWork,W,H);
                 const err=calcErr(ctxWork.getImageData(0,0,W,H));
-                if(err<bestErr){
+                
+                const operators = ['translate', 'scale', 'rotate', 'color', 'opacity'];
+                const operator = operators[Math.floor(Math.random() * operators.length)];
+                const improved = err < bestErr;
+                
+                if(improved){
                     polys=candidate;
                     bestPolys=candidate.map(p=>({...p,pts:p.pts.map(pt=>[...pt])}));
                     bestErr=err;
                     impr++;
                     mutRate=Math.max(0.18,mutRate*0.9999);
+                    
+                    // Record successful mutation
+                    recordMutation(operator, true, fitPct(err));
                 }else{
                     mutRate=Math.min(2.2,mutRate*1.00005);
+                    // Record failed mutation (every 10th)
+                    if (Math.random() < 0.1) {
+                        recordMutation(operator, false, fitPct(err));
+                    }
                 }
                 gen++;
                 rateT.n++;
@@ -394,7 +494,7 @@
             crvCtx.fillText(mn.toFixed(1)+'%',4,ch-3);
         }
 
-        // ── Controls ───────────────────────────────────────────────────
+        // ========== CONTROLS ==========
         function doStart(){
             if(!targetPx)return;
             running=true;
@@ -441,14 +541,14 @@
             updateDisplay();
         }
 
-        // ── Toggle evolved panel ───────────────────────────────────────
+        // ========== TOGGLE EVOLVED ==========
         function toggleEvolved(){
             document.body.classList.toggle('evolved-hidden');
             const btn=document.getElementById('bToggleEvolved');
             btn.textContent=document.body.classList.contains('evolved-hidden')?'👁 Show Evolved':'👁 Hide Evolved';
         }
 
-        // ── v5 Genome export ───────────────────────────────────────────
+        // ========== V5 GENOME EXPORT ==========
         function genPG(){
             const fp=fitPct(bestErr);
             const date=new Date().toISOString().split('T')[0];
@@ -458,6 +558,7 @@
 -- Generation: ${gen.toLocaleString()}
 -- Fitness: ${fp.toFixed(2)}%
 -- Polygons: ${bestPolys.length}
+-- Training Samples: ${trainingSamples}
 -- Artist: PIGMENT Evolutionary Engine
 
 canvas {
@@ -502,7 +603,10 @@ palette {
   }\n`;
             });
             
-            pg+=`}\n\n-- End of genome`;
+            pg+=`}\n\n-- AI Metadata
+-- @training_samples ${trainingSamples}
+-- @best_fitness ${fp.toFixed(2)}
+`;
             return pg;
         }
         
@@ -530,7 +634,7 @@ palette {
             a.click();
         }
 
-        // ── File drop ──────────────────────────────────────────────────
+        // ========== FILE DROP ==========
         document.getElementById('fi').onchange=e=>{
             if(e.target.files.length)loadFiles(e.target.files);
         };
@@ -549,7 +653,7 @@ palette {
             if(e.dataTransfer.files.length)loadFiles(e.dataTransfer.files);
         });
 
-        // Curve resize
+        // ========== CURVE RESIZE ==========
         function rCrv(){
             const parent=document.getElementById('crv').parentElement;
             crv.width=Math.min(parent.clientWidth||500,500);
