@@ -503,7 +503,7 @@
         document.getElementById('exportPG')?.addEventListener('click', () => Pigment?.exportPG());
 
         // ============================================
-        // IMAGE LOADING — LOAD NOW, NOTIFY LATER
+        // IMAGE LOADING — LOAD NOW, NOTIFY PIGMENT
         // ============================================
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('fi');
@@ -533,23 +533,39 @@
                     return;
                 }
                 
-                // LOAD IMAGE IMMEDIATELY — NO WAITING!
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        // Draw to canvas NOW — user sees it immediately
+                        // Draw to canvas
                         const canvas = document.getElementById('cvt');
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         
+                        // Get image data for Pigment
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        // Pass to Pigment if available
+                        if (window.Pigment) {
+                            window.Pigment.targetData = imageData;
+                            window.Pigment.canvas.drawTarget(imageData);
+                            
+                            // Initialize evolution
+                            if (!window.Pigment.evolution) {
+                                window.Pigment.evolution = EvolutionEngine.init({
+                                    width: canvas.width,
+                                    height: canvas.height,
+                                    targetData: imageData,
+                                    supabase: window.SupabaseClient
+                                });
+                            } else {
+                                window.Pigment.evolution.config.targetData = imageData;
+                                window.Pigment.evolution.reset();
+                            }
+                        }
+                        
                         // Enable start button
                         document.getElementById('bstart').disabled = false;
-                        
-                        // OPTIONALLY notify Pigment if it exists
-                        if (window.Pigment?.setTargetImage) {
-                            window.Pigment.setTargetImage(img);
-                        }
                         
                         console.log('✅ Image loaded successfully:', file.name);
                     };
@@ -572,11 +588,27 @@
                         const canvas = document.getElementById('cvt');
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        document.getElementById('bstart').disabled = false;
                         
-                        if (window.Pigment?.setTargetImage) {
-                            window.Pigment.setTargetImage(img);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        if (window.Pigment) {
+                            window.Pigment.targetData = imageData;
+                            window.Pigment.canvas.drawTarget(imageData);
+                            
+                            if (!window.Pigment.evolution) {
+                                window.Pigment.evolution = EvolutionEngine.init({
+                                    width: canvas.width,
+                                    height: canvas.height,
+                                    targetData: imageData,
+                                    supabase: window.SupabaseClient
+                                });
+                            } else {
+                                window.Pigment.evolution.config.targetData = imageData;
+                                window.Pigment.evolution.reset();
+                            }
                         }
+                        
+                        document.getElementById('bstart').disabled = false;
                     };
                     img.src = e.target.result;
                 };
@@ -607,7 +639,6 @@
                     return;
                 }
                 
-                // Load PG file
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const content = e.target.result;
