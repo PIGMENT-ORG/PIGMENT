@@ -7,8 +7,12 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
   
+  // Initialize Supabase client
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -26,11 +30,17 @@ serve(async (req) => {
       offspring_fitness: evolutionData.offspringFitness || 0,
       operator_used: evolutionData.operator || 'unknown',
       style_category: evolutionData.styleCategory || 'general',
-      metadata: { generation: evolutionData.generation, polygonCount: evolutionData.polygonCount }
+      metadata: { 
+        generation: evolutionData.generation, 
+        polygonCount: evolutionData.polygonCount 
+      }
     })
     
     // Check if we should trigger model update (every 100 samples)
-    const { count } = await supabase.from('training_data').select('*', { count: 'exact', head: true })
+    const { count } = await supabase
+      .from('training_data')
+      .select('*', { count: 'exact', head: true })
+    
     const shouldRetrain = count && count % 100 === 0
     
     return new Response(JSON.stringify({ 
