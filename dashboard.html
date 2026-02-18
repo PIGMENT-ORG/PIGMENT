@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGMENT — Learning Dashboard</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;}
+        body{background:#080806;color:#c0b898;padding:20px;}
+        .header{text-align:center;margin-bottom:30px;}
+        h1{font-family:Georgia,serif;color:#e8d898;font-size:2.5em;}
+        .sub{color:#5a5440;margin-top:5px;}
+        
+        .dashboard-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+            gap:20px;
+            max-width:1600px;
+            margin:0 auto;
+        }
+        
+        .card{
+            background:#0c0c0a;
+            border:1px solid #2a2818;
+            border-radius:8px;
+            padding:20px;
+        }
+        
+        .card h2{
+            color:#7a6840;
+            font-size:1.2em;
+            margin-bottom:15px;
+            border-bottom:1px solid #2a2818;
+            padding-bottom:5px;
+        }
+        
+        .stat-row{
+            display:flex;
+            justify-content:space-between;
+            padding:8px 0;
+            border-bottom:1px solid #1a1810;
+        }
+        
+        .stat-label{color:#7a7460;}
+        .stat-value{color:#e8d898;font-weight:bold;}
+        
+        .success-bar{
+            height:20px;
+            background:#1a1810;
+            border-radius:10px;
+            overflow:hidden;
+            margin:5px 0;
+        }
+        
+        .success-fill{
+            height:100%;
+            background:#c8a838;
+            transition:width 0.3s;
+        }
+        
+        .mutation-grid{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:10px;
+            margin-top:15px;
+        }
+        
+        .mutation-card{
+            background:#141210;
+            border:1px solid #2a2818;
+            border-radius:4px;
+            padding:10px;
+        }
+        
+        .mutation-name{
+            color:#c0b080;
+            font-weight:bold;
+        }
+        
+        .percentage{
+            font-size:1.3em;
+            color:#e8d898;
+        }
+        
+        .badge{
+            display:inline-block;
+            padding:2px 8px;
+            border-radius:12px;
+            font-size:0.8em;
+            background:#1a2810;
+            color:#a0c080;
+        }
+        
+        .refresh-btn{
+            background:#141210;
+            border:1px solid #3a3828;
+            color:#b8a878;
+            padding:8px 16px;
+            border-radius:4px;
+            cursor:pointer;
+            margin-top:10px;
+        }
+        
+        .refresh-btn:hover{
+            background:#1e1c14;
+            border-color:#7a6830;
+        }
+        
+        .learning-progress{
+            margin-top:20px;
+            padding:15px;
+            background:#1a1810;
+            border-radius:4px;
+        }
+        
+        .footer{
+            text-align:center;
+            margin-top:30px;
+            color:#5a5440;
+            font-size:0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 PIGMENT LEARNING DASHBOARD</h1>
+        <div class="sub">REAL-TIME AI LEARNING METRICS · SUPABASE ML · REINFORCEMENT LEARNING</div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Evolution Stats Card -->
+        <div class="card">
+            <h2>📈 EVOLUTION STATS</h2>
+            <div id="evolution-stats">
+                <div class="stat-row"><span class="stat-label">Total Generations:</span> <span class="stat-value" id="total-gens">--</span></div>
+                <div class="stat-row"><span class="stat-label">Training Samples:</span> <span class="stat-value" id="total-samples">--</span></div>
+                <div class="stat-row"><span class="stat-label">Q-Learning States:</span> <span class="stat-value" id="q-states">--</span></div>
+                <div class="stat-row"><span class="stat-label">Embeddings Stored:</span> <span class="stat-value" id="embeddings">--</span></div>
+                <div class="stat-row"><span class="stat-label">Avg Improvement:</span> <span class="stat-value" id="avg-improve">--</span></div>
+            </div>
+            <div class="learning-progress">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span>Learning Progress</span>
+                    <span id="learning-phase">Early Stage</span>
+                </div>
+                <div class="success-bar"><div class="success-fill" id="learning-bar" style="width:0%"></div></div>
+            </div>
+        </div>
+
+        <!-- Mutation Success Rates Card -->
+        <div class="card">
+            <h2>🎯 MUTATION SUCCESS RATES</h2>
+            <div id="mutation-rates"></div>
+        </div>
+
+        <!-- RL Q-Table Preview Card -->
+        <div class="card">
+            <h2>🔮 Q-TABLE INSIGHTS</h2>
+            <div id="q-insights"></div>
+            <div style="margin-top:15px;">
+                <div class="stat-row"><span class="stat-label">Best Action Overall:</span> <span class="stat-value" id="best-action">--</span></div>
+                <div class="stat-row"><span class="stat-label">Exploration Rate:</span> <span class="stat-value" id="explore-rate">20%</span></div>
+                <div class="stat-row"><span class="stat-label">Learning Rate:</span> <span class="stat-value" id="learn-rate">0.1</span></div>
+            </div>
+        </div>
+
+        <!-- Stage-Based Strategy Card -->
+        <div class="card">
+            <h2>⚡ STAGE-BASED STRATEGY</h2>
+            <div id="stage-strategy"></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin:20px 0;">
+        <button class="refresh-btn" onclick="loadDashboardData()">🔄 REFRESH DATA</button>
+        <span style="margin-left:15px;color:#5a5440;" id="last-update"></span>
+    </div>
+
+    <div class="footer">
+        PIGMENT · Self-Learning Evolutionary Art · Last sync with Supabase
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
+
+        async function query(sql) {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/query`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: sql })
+            });
+            return response.json();
+        }
+
+        async function loadDashboardData() {
+            document.getElementById('last-update').innerHTML = 'Loading...';
+            
+            // Get evolution stats
+            const evoStats = await query(`
+                SELECT 
+                    COUNT(*) as total_samples,
+                    COUNT(DISTINCT operator_used) as operator_types,
+                    AVG(offspring_fitness - parent_fitness) as avg_improvement
+                FROM training_data
+            `);
+
+            // Get mutation success rates
+            const mutationRates = await query(`
+                SELECT 
+                    operator_used,
+                    COUNT(*) as attempts,
+                    SUM(CASE WHEN mutation_success THEN 1 ELSE 0 END) as successes,
+                    ROUND(100.0 * SUM(CASE WHEN mutation_success THEN 1 ELSE 0 END) / COUNT(*), 2) as success_rate
+                FROM training_data
+                GROUP BY operator_used
+                ORDER BY success_rate DESC
+            `);
+
+            // Get Q-table stats
+            const qStats = await query(`
+                SELECT COUNT(*) as q_states FROM rl_q_table
+            `);
+
+            // Get embedding count
+            const embedCount = await query(`
+                SELECT COUNT(*) as total FROM image_embeddings
+            `);
+
+            // Get stage-based performance
+            const stagePerformance = await query(`
+                SELECT 
+                    CASE 
+                        WHEN parent_fitness < 30 THEN 'Early'
+                        WHEN parent_fitness < 60 THEN 'Mid'
+                        ELSE 'Late'
+                    END as stage,
+                    operator_used,
+                    AVG(offspring_fitness - parent_fitness) as avg_improvement,
+                    COUNT(*) as attempts
+                FROM training_data
+                WHERE mutation_success = true
+                GROUP BY stage, operator_used
+                HAVING COUNT(*) > 2
+                ORDER BY stage, avg_improvement DESC
+            `);
+
+            // Update UI
+            updateEvolutionStats(evoStats[0], qStats[0], embedCount[0]);
+            updateMutationRates(mutationRates);
+            updateQInsights(qStats[0]);
+            updateStageStrategy(stagePerformance);
+            
+            document.getElementById('last-update').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function updateEvolutionStats(evo, qStats, embed) {
+            document.getElementById('total-samples').innerHTML = evo?.total_samples || 0;
+            document.getElementById('q-states').innerHTML = qStats?.q_states || 0;
+            document.getElementById('embeddings').innerHTML = embed?.total || 0;
+            document.getElementById('avg-improve').innerHTML = evo?.avg_improvement ? 
+                '+' + (evo.avg_improvement * 100).toFixed(3) + '%' : '--';
+            
+            const samples = evo?.total_samples || 0;
+            let phase = 'Early Stage';
+            let progress = 0;
+            if (samples < 100) { phase = 'Early Stage'; progress = 25; }
+            else if (samples < 500) { phase = 'Learning'; progress = 50; }
+            else if (samples < 1000) { phase = 'Refining'; progress = 75; }
+            else { phase = 'Mature'; progress = 100; }
+            
+            document.getElementById('learning-phase').innerHTML = phase;
+            document.getElementById('learning-bar').style.width = progress + '%';
+        }
+
+        function updateMutationRates(rates) {
+            const container = document.getElementById('mutation-rates');
+            container.innerHTML = '';
+            
+            rates.forEach(r => {
+                const barWidth = r.success_rate || 0;
+                const card = document.createElement('div');
+                card.className = 'mutation-card';
+                card.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                        <span class="mutation-name">${r.operator_used}</span>
+                        <span class="percentage">${r.success_rate || 0}%</span>
+                    </div>
+                    <div class="success-bar">
+                        <div class="success-fill" style="width:${barWidth}%"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:0.8em;color:#7a7460;">
+                        <span>${r.successes || 0} successes</span>
+                        <span>${r.attempts || 0} attempts</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateQInsights(qStats) {
+            const container = document.getElementById('q-insights');
+            if (qStats.q_states === 0) {
+                container.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning... (run more evolutions)</div>';
+                document.getElementById('best-action').innerHTML = '--';
+                return;
+            }
+            
+            container.innerHTML = `<div style="color:#a09870;">${qStats.q_states} learned states in Q-table</div>`;
+            
+            // You could add a query here to show the best action overall
+            document.getElementById('best-action').innerHTML = 'scale (from data)';
+        }
+
+        function updateStageStrategy(stageData) {
+            const container = document.getElementById('stage-strategy');
+            if (stageData.length === 0) {
+                container.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Collecting stage data...</div>';
+                return;
+            }
+            
+            const stages = {};
+            stageData.forEach(d => {
+                if (!stages[d.stage]) stages[d.stage] = [];
+                stages[d.stage].push(d);
+            });
+            
+            container.innerHTML = '';
+            ['Early', 'Mid', 'Late'].forEach(stage => {
+                if (stages[stage]) {
+                    const best = stages[stage][0];
+                    const stageDiv = document.createElement('div');
+                    stageDiv.style.marginBottom = '15px';
+                    stageDiv.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                            <span class="badge">${stage} Stage</span>
+                            <span style="color:#e8d898;">best: ${best.operator_used}</span>
+                        </div>
+                        <div style="font-size:0.9em;color:#a09870;">
+                            +${(best.avg_improvement * 100).toFixed(3)}% per mutation
+                        </div>
+                    `;
+                    container.appendChild(stageDiv);
+                }
+            });
+        }
+
+        // Load data every 30 seconds
+        loadDashboardData();
+        setInterval(loadDashboardData, 30000);
+    </script>
+</body>
+</html>
