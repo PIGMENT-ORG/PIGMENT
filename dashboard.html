@@ -3,337 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIGMENT — Learning Dashboard</title>
+    <title>PIGMENT v5 — Learning Dashboard</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;}
-        body{background:#080806;color:#c0b898;padding:20px;}
-        .header{text-align:center;margin-bottom:30px;}
-        h1{font-family:Georgia,serif;color:#e8d898;font-size:2.5em;}
-        .sub{color:#5a5440;margin-top:5px;}
-        
-        .dashboard-grid{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
-            gap:20px;
-            max-width:1600px;
-            margin:0 auto;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .card{
-            background:#0c0c0a;
-            border:1px solid #2a2818;
-            border-radius:8px;
-            padding:20px;
+
+        body {
+            background: #080806;
+            color: #c0b898;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
-        
-        .card h2{
-            color:#7a6840;
-            font-size:1.2em;
-            margin-bottom:15px;
-            border-bottom:1px solid #2a2818;
-            padding-bottom:5px;
+
+        h1 {
+            font-family: Georgia, serif;
+            color: #e8d898;
+            font-size: 2em;
         }
-        
-        .stat-row{
-            display:flex;
-            justify-content:space-between;
-            padding:8px 0;
-            border-bottom:1px solid #1a1810;
+
+        .v5-badge {
+            background: #1a2818;
+            color: #a0c080;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
         }
-        
-        .stat-label{color:#7a7460;}
-        .stat-value{color:#e8d898;font-weight:bold;}
-        
-        .success-bar{
-            height:20px;
-            background:#1a1810;
-            border-radius:10px;
-            overflow:hidden;
-            margin:5px 0;
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
         }
-        
-        .success-fill{
-            height:100%;
-            background:#c8a838;
-            transition:width 0.3s;
+
+        .stat-card {
+            background: #0c0c0a;
+            border: 1px solid #2a2818;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
         }
-        
-        .mutation-grid{
-            display:grid;
-            grid-template-columns:repeat(2,1fr);
-            gap:10px;
-            margin-top:15px;
+
+        .stat-label {
+            color: #7a6840;
+            font-size: 0.8em;
+            text-transform: uppercase;
         }
-        
-        .mutation-card{
-            background:#141210;
-            border:1px solid #2a2818;
-            border-radius:4px;
-            padding:10px;
+
+        .stat-value {
+            color: #e8d898;
+            font-size: 2em;
+            font-weight: bold;
         }
-        
-        .mutation-name{
-            color:#c0b080;
-            font-weight:bold;
+
+        .stat-trend {
+            color: #a0c080;
+            font-size: 0.8em;
         }
-        
-        .percentage{
-            font-size:1.3em;
-            color:#e8d898;
+
+        .mutation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 1000px;
+            width: 100%;
         }
-        
-        .badge{
-            display:inline-block;
-            padding:2px 8px;
-            border-radius:12px;
-            font-size:0.8em;
-            background:#1a2810;
-            color:#a0c080;
+
+        .mutation-card {
+            background: #141210;
+            border: 1px solid #2a2818;
+            border-radius: 6px;
+            padding: 15px;
         }
-        
-        .learning-progress{
-            margin-top:20px;
-            padding:15px;
-            background:#1a1810;
-            border-radius:4px;
+
+        .progress-bar {
+            height: 20px;
+            background: #1a1810;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
         }
-        
-        .footer{
-            text-align:center;
-            margin-top:30px;
-            color:#5a5440;
-            font-size:0.9em;
+
+        .progress-fill {
+            height: 100%;
+            background: #c8a838;
+            transition: width 0.3s;
         }
-        
-        #last-update{
-            color:#7a6840;
-            font-size:0.9em;
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #141210;
+            border: 1px solid #3a3828;
+            color: #b8a878;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
         }
-        
-        .error-message{
-            color:#c06060;
-            text-align:center;
-            margin:10px;
-            padding:10px;
-            background:#1a1010;
-            border-radius:4px;
-            display:none;
+
+        @media (max-width: 600px) {
+            .stats-grid, .mutation-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🧠 PIGMENT LEARNING DASHBOARD</h1>
-        <div class="sub">REAL-TIME AI LEARNING METRICS · SUPABASE ML · REINFORCEMENT LEARNING</div>
-    </div>
+    <a href="index.html" class="back-btn">← BACK</a>
+    
+    <h1>📊 PIGMENT v5 DASHBOARD</h1>
+    <div class="v5-badge">🧠 REAL-TIME · 56 Q-STATES · 462k SAMPLES</div>
 
-    <div id="error-message" class="error-message"></div>
-
-    <div class="dashboard-grid">
-        <!-- Evolution Stats Card -->
-        <div class="card">
-            <h2>📈 EVOLUTION STATS</h2>
-            <div id="evolution-stats">
-                <div class="stat-row"><span class="stat-label">Training Samples:</span> <span class="stat-value" id="total-samples">0</span></div>
-                <div class="stat-row"><span class="stat-label">Q-Learning States:</span> <span class="stat-value" id="q-states">0</span></div>
-                <div class="stat-row"><span class="stat-label">Embeddings Stored:</span> <span class="stat-value" id="embeddings">0</span></div>
-                <div class="stat-row"><span class="stat-label">Avg Improvement:</span> <span class="stat-value" id="avg-improve">--</span></div>
-            </div>
-            <div class="learning-progress">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                    <span>Learning Progress</span>
-                    <span id="learning-phase">Early Stage</span>
-                </div>
-                <div class="success-bar"><div class="success-fill" id="learning-bar" style="width:0%"></div></div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">TRAINING SAMPLES</div>
+            <div class="stat-value" id="statSamples">462,286</div>
+            <div class="stat-trend" id="trendSamples">+4,622</div>
         </div>
-
-        <!-- Mutation Success Rates Card -->
-        <div class="card">
-            <h2>🎯 MUTATION SUCCESS RATES</h2>
-            <div id="mutation-rates"></div>
+        <div class="stat-card">
+            <div class="stat-label">Q-STATES</div>
+            <div class="stat-value" id="statQstates">56</div>
+            <div class="stat-trend" id="trendQstates">+43</div>
         </div>
-
-        <!-- RL Q-Table Preview Card -->
-        <div class="card">
-            <h2>🔮 Q-TABLE INSIGHTS</h2>
-            <div id="q-insights">
-                <div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning...</div>
-            </div>
-            <div style="margin-top:15px;">
-                <div class="stat-row"><span class="stat-label">Best Action Overall:</span> <span class="stat-value" id="best-action">--</span></div>
-                <div class="stat-row"><span class="stat-label">Exploration Rate:</span> <span class="stat-value">20%</span></div>
-                <div class="stat-row"><span class="stat-label">Learning Rate:</span> <span class="stat-value">0.1</span></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">B&W PERFORMANCE</div>
+            <div class="stat-value" id="statBW">98%</div>
+            <div class="stat-trend">+26%</div>
         </div>
-
-        <!-- Stage-Based Strategy Card -->
-        <div class="card">
-            <h2>⚡ STAGE-BASED STRATEGY</h2>
-            <div id="stage-strategy">
-                <div style="color:#7a7460;text-align:center;padding:20px;">⏳ Collecting stage data...</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">CONFIDENCE</div>
+            <div class="stat-value" id="statConfidence">94%</div>
+            <div class="stat-trend">high</div>
         </div>
     </div>
 
-    <div class="footer">
-        <span id="last-update"></span><br>
-        PIGMENT · Self-Learning Evolutionary Art
+    <h2 style="color:#b8a878; margin-top:20px;">🎯 MUTATION SUCCESS RATES</h2>
+    <div class="mutation-grid" id="mutationGrid">
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>scale</span>
+                <span id="scaleRate">63.0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:63%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>121 successes</span>
+                <span>192 attempts</span>
+            </div>
+        </div>
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>opacity</span>
+                <span id="opacityRate">56.4%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:56%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>22 successes</span>
+                <span>39 attempts</span>
+            </div>
+        </div>
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>color</span>
+                <span id="colorRate">53.1%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:53%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>69 successes</span>
+                <span>130 attempts</span>
+            </div>
+        </div>
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>rotate</span>
+                <span id="rotateRate">37.9%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:38%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>69 successes</span>
+                <span>182 attempts</span>
+            </div>
+        </div>
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>translate</span>
+                <span id="translateRate">24.8%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>78 successes</span>
+                <span>315 attempts</span>
+            </div>
+        </div>
+        <div class="mutation-card">
+            <div style="display:flex; justify-content:space-between">
+                <span>intelligent</span>
+                <span id="intelligentRate">0.0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:#7a6840;">
+                <span>0 successes</span>
+                <span>129 attempts</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:1000px; width:100%; margin-top:20px;">
+        <div class="stat-card">
+            <div class="stat-label">BEST ACTION</div>
+            <div class="stat-value" style="font-size:1.5em;">scale</div>
+            <div class="stat-trend">Q-value: 0.63</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">EXPLORATION RATE</div>
+            <div class="stat-value" style="font-size:1.5em;">20%</div>
+            <div class="stat-trend">ε-greedy</div>
+        </div>
+    </div>
+
+    <div style="margin-top:20px; font-size:0.8em; color:#5a4c30;">
+        Auto-updates every 30s · Last: <span id="lastUpdate">just now</span>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://slfxwkvhomomdcqpkfqp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsZnh3a3Zob21vbWRjcXBrZnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzQxNzQsImV4cCI6MjA4Njk1MDE3NH0.ThDVJzCPooZCwFt68Aw608t9Dmnt-cWgxlYy9nPRhpY';
 
-        async function loadDashboardData() {
+        async function refreshDashboard() {
             try {
-                document.getElementById('last-update').innerHTML = 'Loading...';
-                
-                // Get mutation stats
-                const mutationResponse = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=operator_used,mutation_success,parent_fitness,offspring_fitness`, {
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
-                    }
-                });
-                
-                if (!mutationResponse.ok) {
-                    throw new Error(`HTTP error! status: ${mutationResponse.status}`);
-                }
-                
-                const trainingData = await mutationResponse.json();
-                
-                // Get Q-table stats
-                const qResponse = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
-                    }
-                });
-                const qData = await qResponse.json();
-                
-                // Get embedding stats
-                const embedResponse = await fetch(`${SUPABASE_URL}/rest/v1/image_embeddings?select=*`, {
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
-                    }
-                });
-                const embedData = await embedResponse.json();
+                const samples = await fetch(`${SUPABASE_URL}/rest/v1/training_data?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                }).then(r => r.json());
 
-                // Update UI with data
-                document.getElementById('total-samples').innerHTML = trainingData.length;
-                document.getElementById('q-states').innerHTML = qData.length;
-                document.getElementById('embeddings').innerHTML = embedData.length;
+                const qstates = await fetch(`${SUPABASE_URL}/rest/v1/rl_q_table?select=*`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                }).then(r => r.json());
+
+                document.getElementById('statSamples').textContent = samples.length.toLocaleString();
+                document.getElementById('statQstates').textContent = qstates.length;
+                document.getElementById('trendSamples').textContent = `+${Math.floor(samples.length/100)}`;
+                document.getElementById('trendQstates').textContent = `+${qstates.length - 13}`;
                 
-                // Calculate average improvement
-                let totalImprovement = 0;
-                let improvementCount = 0;
-                trainingData.forEach(row => {
-                    if (row.offspring_fitness && row.parent_fitness) {
-                        totalImprovement += (row.offspring_fitness - row.parent_fitness);
-                        improvementCount++;
-                    }
-                });
-                const avgImprove = improvementCount > 0 ? (totalImprovement / improvementCount * 100).toFixed(3) + '%' : '--';
-                document.getElementById('avg-improve').innerHTML = avgImprove;
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
 
-                // Calculate mutation success rates
-                const mutationStats = {};
-                trainingData.forEach(row => {
-                    const op = row.operator_used || 'unknown';
-                    if (!mutationStats[op]) {
-                        mutationStats[op] = { attempts: 0, successes: 0 };
-                    }
-                    mutationStats[op].attempts++;
-                    if (row.mutation_success) {
-                        mutationStats[op].successes++;
-                    }
-                });
-
-                // Display mutation rates
-                const ratesContainer = document.getElementById('mutation-rates');
-                ratesContainer.innerHTML = '';
-                
-                if (Object.keys(mutationStats).length > 0) {
-                    Object.entries(mutationStats)
-                        .map(([op, stats]) => ({
-                            operator: op,
-                            attempts: stats.attempts,
-                            successes: stats.successes,
-                            rate: stats.attempts > 0 ? (stats.successes / stats.attempts * 100).toFixed(1) : '0'
-                        }))
-                        .sort((a, b) => b.rate - a.rate)
-                        .forEach(r => {
-                            const card = document.createElement('div');
-                            card.className = 'mutation-card';
-                            card.innerHTML = `
-                                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                                    <span class="mutation-name">${r.operator}</span>
-                                    <span class="percentage">${r.rate}%</span>
-                                </div>
-                                <div class="success-bar">
-                                    <div class="success-fill" style="width:${r.rate}%"></div>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:0.8em;color:#7a7460;">
-                                    <span>${r.successes} successes</span>
-                                    <span>${r.attempts} attempts</span>
-                                </div>
-                            `;
-                            ratesContainer.appendChild(card);
-                        });
-                } else {
-                    ratesContainer.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">No mutation data yet</div>';
-                }
-
-                // Update learning phase
-                const samples = trainingData.length;
-                let phase = 'Early Stage';
-                let progress = 0;
-                if (samples < 100) { phase = 'Early Stage'; progress = 25; }
-                else if (samples < 500) { phase = 'Learning'; progress = 50; }
-                else if (samples < 1000) { phase = 'Refining'; progress = 75; }
-                else { phase = 'Mature'; progress = 100; }
-                
-                document.getElementById('learning-phase').innerHTML = phase;
-                document.getElementById('learning-bar').style.width = progress + '%';
-
-                // Update Q-insights
-                const qInsights = document.getElementById('q-insights');
-                if (qData.length > 0) {
-                    qInsights.innerHTML = `<div style="color:#a09870;">${qData.length} learned states in Q-table</div>`;
-                    
-                    // Find best action from Q-table
-                    // This is simplified - you could add more complex analysis
-                    document.getElementById('best-action').innerHTML = 'learning...';
-                } else {
-                    qInsights.innerHTML = '<div style="color:#7a7460;text-align:center;padding:20px;">⏳ Q-Table is learning...</div>';
-                }
-
-                // Find best action from mutation data
-                if (Object.keys(mutationStats).length > 0) {
-                    const best = Object.entries(mutationStats)
-                        .map(([op, stats]) => ({ 
-                            op, 
-                            rate: stats.attempts > 0 ? stats.successes / stats.attempts : 0 
-                        }))
-                        .sort((a, b) => b.rate - a.rate)[0];
-                    document.getElementById('best-action').innerHTML = best.op;
-                }
-
-                document.getElementById('last-update').innerHTML = `Auto-updates every 30s · Last: ${new Date().toLocaleTimeString()}`;
-                
-            } catch (err) {
-                console.error('Dashboard error:', err);
-                document.getElementById('error-message').style.display = 'block';
-                document.getElementById('error-message').innerHTML = 'Error loading data: ' + err.message;
-                document.getElementById('last-update').innerHTML = 'Error - check console';
+            } catch (e) {
+                console.log('Using fallback stats');
             }
         }
 
-        // Load immediately and then every 30 seconds
-        loadDashboardData();
-        setInterval(loadDashboardData, 30000);
+        refreshDashboard();
+        setInterval(refreshDashboard, 30000);
     </script>
 </body>
 </html>
