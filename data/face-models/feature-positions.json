@@ -1,0 +1,36 @@
+{
+  "description": "Expected facial feature locations in normalized 0-1 space",
+  "version": "1.0",
+  "regions": {
+    "forehead": {
+      "top": 0.1,
+      "bottom": 0.32,
+      "left": 0.2,
+      "right": 0.8
+    },
+    "eyeRegion": {
+      "top": 0.32,
+      "bottom": 0.5,
+      "left": 0.2,
+      "right": 0.8
+    },
+    "noseRegion": {
+      "top": 0.45,
+      "bottom": 0.65,
+      "left": 0.38,
+      "right": 0.62
+    },
+    "mouthRegion": {
+      "top": 0.63,
+      "bottom": 0.78,
+      "left": 0.3,
+      "right": 0.7
+    },
+    "chinRegion": {
+      "top": 0.78,
+      "bottom": 0.95,
+      "left": 0.3,
+      "right": 0.7
+    }
+  }
+}

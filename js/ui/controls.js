@@ -1,0 +1,55 @@
+const UIControls = {
+    init(){this.bindButtons();this.bindTabs();this.bindSliders();this.bindCheckboxes();this.bindFileInputs();},
+    bindButtons(){
+        const b=(id,fn)=>document.getElementById(id)?.addEventListener('click',fn);
+        b('bstart',()=>window.Pigment?.start());
+        b('bpause',()=>window.Pigment?.pause());
+        b('breset',()=>window.Pigment?.reset());
+        b('bstep',()=>window.Pigment?.step());
+        b('exportPG',()=>window.Pigment?.exportPG());
+        b('copyGenome',()=>window.Pigment?.copyGenome());
+        b('savePNG',()=>window.Pigment?.exportImage('png'));
+        b('saveJPG',()=>window.Pigment?.exportImage('jpg'));
+        b('saveSVG',()=>window.Pigment?.exportImage('svg'));
+    },
+    bindTabs(){document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',e=>this.switchTab(e.target.dataset.tab)));},
+    switchTab(tabId){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
+        document.getElementById(`${tabId}-tab`)?.classList.add('active');
+    },
+    bindSliders(){
+        document.getElementById('rsize')?.addEventListener('input',e=>window.Pigment?.updateParam('polygonSize',e.target.value));
+        document.getElementById('mutRate')?.addEventListener('input',e=>window.Pigment?.updateParam('mutationRate',e.target.value));
+        document.getElementById('temperature')?.addEventListener('input',e=>window.Pigment?.updateParam('temperature',e.target.value));
+    },
+    bindCheckboxes(){
+        ['showOutlines','overlayDiff'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>window.Pigment?.updateDisplay()));
+        document.getElementById('useFaceDetect')?.addEventListener('change',e=>window.Pigment?.updateParam('useFaceDetect',e.target.checked));
+    },
+    bindFileInputs(){
+        document.getElementById('fi')?.addEventListener('change',e=>{if(e.target.files[0]&&window.Pigment)Pigment.loadImage(e.target.files[0]);});
+        document.getElementById('pgFile')?.addEventListener('change',e=>{if(e.target.files[0]&&window.Pigment)Pigment.loadPG(e.target.files[0]);});
+    },
+    updateRunningState(isRunning){
+        document.getElementById('bstart').disabled=isRunning;
+        document.getElementById('bpause').disabled=!isRunning;
+        document.getElementById('breset').disabled=false;
+        document.getElementById('bstep').disabled=isRunning;
+    },
+    updatePauseButton(isPaused){const b=document.getElementById('bpause');if(b)b.textContent=isPaused?'▶ RESUME':'⏸ PAUSE';},
+    getSettings(){
+        return {
+            polygonCount:parseInt(document.getElementById('selpoly')?.value||'50'),
+            speed:parseInt(document.getElementById('selspd')?.value||'20'),
+            polygonSize:parseFloat(document.getElementById('rsize')?.value||'4'),
+            algorithm:document.getElementById('algorithm')?.value||'multi',
+            mutationRate:parseFloat(document.getElementById('mutRate')?.value||'1'),
+            temperature:parseFloat(document.getElementById('temperature')?.value||'1'),
+            showOutlines:document.getElementById('showOutlines')?.checked||false,
+            overlayDiff:document.getElementById('overlayDiff')?.checked||false
+        };
+    }
+};
+window.UIControls=UIControls;
