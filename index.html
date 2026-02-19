@@ -35,6 +35,8 @@
         button.compile:hover{background:#2a3a2a}
         button.ai{background:#2a1a3a;border-color:#8a6ae0;color:#b8a0ff}
         button.ai:hover{background:#3a2a4a;border-color:#a080ff;color:#d0b0ff}
+        button.dual{background:#3a2a1a;border-color:#e0b060;color:#ffd700}
+        button.dual:hover{background:#4a3a2a;border-color:#ffd700;color:#ffffa0}
 
         select,input[type=range]{background:#141210;border:1px solid #3a3828;color:#b8a878;
           padding:5px 6px;border-radius:4px;font-family:inherit;font-size:clamp(0.7rem, 3vw, 0.78rem);max-width:120px}
@@ -89,7 +91,7 @@
     <div id="training-badge">🧠 Training: 0 samples</div>
 
     <h1>PIGMENT — Evolutionary Painter</h1>
-    <div class="sub">MULTI-IMAGE · V5 SYNTAX · SUPABASE ML · WEBGL COMPILER · ULTIMATE AI</div>
+    <div class="sub">MULTI-IMAGE · V5 SYNTAX · SUPABASE ML · WEBGL COMPILER · ULTIMATE AI · DUAL-CANVAS</div>
 
     <div class="upload-container">
         <div id="dropzone" onclick="document.getElementById('fi').click()">
@@ -108,6 +110,7 @@
         <button class="toggle" id="bToggleEvolved" onclick="toggleEvolved()">👁 Hide Evolved</button>
         <button class="compile" id="bCompile" onclick="compileToWebGL()">🎨 Compile to WebGL</button>
         <button class="ai" id="bUltimateAI" onclick="getUltimateAIPrediction()">🤖 Ultimate AI</button>
+        <button class="dual" id="bDualSave" onclick="saveBothPNG()">📸 Save Both PNG</button>
         <span style="width:1px;height:22px;background:#1e1c14"></span>
         <label>Polygons
             <select id="selpoly"><option value="50" selected>50</option><option value="100">100</option><option value="150">150</option><option value="200">200</option></select>
@@ -143,6 +146,7 @@
             <button onclick="doExport()">↓ Export .pg</button>
             <button onclick="doCopy()">📋 Copy</button>
             <button onclick="doSaveImg()">🖼 Save PNG</button>
+            <button onclick="saveBothPNG()">📸 Save Both PNG</button>
             <button onclick="document.getElementById('pg-out').value=genPG()">🔄 Refresh</button>
             <button onclick="exportTrainingData()">📊 Export Training</button>
         </div>
@@ -158,7 +162,6 @@
         const COMPILER_URL = 'https://unaproned-paityn-superseraphic.ngrok-free.dev';
 
         // ========== ULTIMATE AI CONFIG ==========
-        // REPLACE THIS WITH YOUR ACTUAL NGROK URL AFTER RUNNING: ngrok http 5000
         const AI_SERVER_URL = 'https://unaproned-paityn-superseraphic.ngrok-free.dev';
 
         async function compileToWebGL() {
@@ -168,17 +171,99 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'ngrok-skip-browser-warning': 'true'  // CRITICAL for ngrok!
+                    'ngrok-skip-browser-warning': 'true'
                 },
                 body: JSON.stringify({pg: pg})
             });
             
             const result = await response.json();
             if (result.url) {
-                // Open the compiled masterpiece
                 window.open(`${COMPILER_URL}${result.url}`);
             } else {
                 alert('Compilation failed: ' + (result.error || 'Unknown error'));
+            }
+        }
+
+        // ========== DUAL CANVAS PNG SAVE ==========
+        function saveBothPNG() {
+            // Save evolved canvas
+            const evolvedCanvas = document.getElementById('cve');
+            const evolvedCtx = evolvedCanvas.getContext('2d');
+            
+            const evolvedLink = document.createElement('a');
+            evolvedLink.download = `evolved_gen${gen}_${fitPct(bestErr).toFixed(1)}.png`;
+            evolvedLink.href = evolvedCanvas.toDataURL('image/png');
+            evolvedLink.click();
+            
+            // Small delay to prevent browser issues
+            setTimeout(() => {
+                // Save diff canvas
+                const diffCanvas = document.getElementById('cvd');
+                const diffLink = document.createElement('a');
+                diffLink.download = `diff_gen${gen}_${fitPct(bestErr).toFixed(1)}.png`;
+                diffLink.href = diffCanvas.toDataURL('image/png');
+                diffLink.click();
+            }, 100);
+            
+            // Also capture both for training if enabled
+            captureBothCanvases();
+        }
+
+        // ========== DUAL CANVAS TRAINING CAPTURE ==========
+        function captureBothCanvases() {
+            try {
+                // Get evolved canvas data
+                const evolvedCanvas = document.getElementById('cve');
+                const evolvedCtx = evolvedCanvas.getContext('2d');
+                const evolvedData = evolvedCtx.getImageData(0, 0, evolvedCanvas.width, evolvedCanvas.height);
+                
+                // Get diff canvas data  
+                const diffCanvas = document.getElementById('cvd');
+                const diffCtx = diffCanvas.getContext('2d');
+                const diffData = diffCtx.getImageData(0, 0, diffCanvas.width, diffCanvas.height);
+                
+                // Convert to base64 for storage
+                const evolvedBase64 = evolvedCanvas.toDataURL('image/png');
+                const diffBase64 = diffCanvas.toDataURL('image/png');
+                
+                // Send BOTH to training data
+                recordDualTrainingPair(evolvedBase64, diffBase64, fitPct(bestErr));
+                
+                console.log('📸 Dual canvas captured for training');
+            } catch (e) {
+                console.log('Dual canvas capture failed:', e);
+            }
+        }
+
+        async function recordDualTrainingPair(evolvedBase64, diffBase64, fitness) {
+            if (!supabaseEnabled) return;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/training_data`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        operator_used: 'dual_capture',
+                        mutation_success: true,
+                        offspring_fitness: fitness,
+                        evolved_image: evolvedBase64.substring(0, 100) + '...', // Store reference
+                        diff_image: diffBase64.substring(0, 100) + '...',
+                        metadata: {
+                            type: 'dual_canvas',
+                            generation: gen,
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Dual canvas data recorded');
+                }
+            } catch (e) {
+                console.log('Dual canvas record failed:', e);
             }
         }
 
@@ -219,7 +304,6 @@
             } catch (e) {
                 console.log('Supabase offline, queueing data');
                 supabaseEnabled = false;
-                // Store in queue for later
                 trainingQueue.push({operator, success, fitness});
             }
         }
@@ -325,11 +409,9 @@
         }
 
         function showUltimateAIPanel(result) {
-            // Remove old panel if exists
             const oldPanel = document.getElementById('ultimate-ai-panel');
             if (oldPanel) oldPanel.remove();
             
-            // Create new panel
             const panel = document.createElement('div');
             panel.id = 'ultimate-ai-panel';
             panel.className = 'ai-panel';
@@ -381,7 +463,6 @@
                 </div>
             `;
             
-            // Insert after stats
             document.querySelector('.stats').after(panel);
         }
 
@@ -393,9 +474,6 @@
                   `illumination: ${params.illumination.weight}\n` +
                   `age shift: ${params.age_shift.intensity}\n` +
                   `color temp: ${params.color_temp.offset}`);
-            
-            // You can expand this to actually modify evolution behavior
-            // For example: mutRate = params.mutation_rate;
         }
 
         // ========== CONSTANTS ==========
@@ -597,7 +675,6 @@
                     recordMutation(operator, true, fitPct(err));
                 }else{
                     mutRate=Math.min(2.2,mutRate*1.00005);
-                    // Record failed mutation (every 10th)
                     if (Math.random() < 0.1) {
                         recordMutation(operator, false, fitPct(err));
                     }
@@ -764,7 +841,6 @@ canvas {
 palette {
 `;
 
-            // Generate palette from unique colors
             const colorMap=new Map();
             bestPolys.forEach((p,i)=>{
                 const hex='#'+[p.r,p.g,p.b].map(c=>c.toString(16).padStart(2,'0')).join('');
@@ -777,7 +853,6 @@ palette {
 
             pg+=`}\n\nlayer base {\n`;
 
-            // Generate zones
             bestPolys.forEach((p,i)=>{
                 const hex='#'+[p.r,p.g,p.b].map(c=>c.toString(16).padStart(2,'0')).join('');
                 const colorName=colorMap.get(hex);
